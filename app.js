@@ -15,7 +15,7 @@ app.get("/", (req, res) => {
 connectDB();
 
 //Routes
-app.use("/clumsytoclean/users/", userRouter);
+app.use("/c2c/users/", userRouter);
 
 const PORT = 3000;
 app.listen(PORT, () => {
