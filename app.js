@@ -27,6 +27,7 @@ app.use("/api/bookings/", bookingRouter);
 app.use("/api/reviews/", reviewRouter);
 app.use("/api/payments/", paymentRouter);
 
+//Connect Server
 const PORT = 3000;
 app.listen(PORT, () => {
   console.log(`Server is running in http://localhost:${PORT}`);
