@@ -5,7 +5,7 @@ import serviceRouter from "./routes/ServiceRoutes.js";
 import bookingRouter from "./routes/BookingRoutes.js";
 import reviewRouter from "./routes/ReviewRoutes.js";
 import paymentRouter from "./routes/PaymentRoutes.js";
-import userRouter from "./routes/UserRoutes.js";
+import customerRouter from "./routes/CustomerRoutes.js";
 
 // Initialized express
 const app = express();
@@ -20,12 +20,12 @@ app.get("/", (req, res) => {
 connectDB();
 
 //Routes
-app.use("/api/users/", userRouter);
 app.use("/api/providers/", providerRouter);
 app.use("/api/services/", serviceRouter);
 app.use("/api/bookings/", bookingRouter);
 app.use("/api/reviews/", reviewRouter);
 app.use("/api/payments/", paymentRouter);
+app.use("/api/customers/", customerRouter);
 
 //Connect Server
 const PORT = 3000;

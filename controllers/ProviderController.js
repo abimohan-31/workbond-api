@@ -2,11 +2,17 @@ import Provider from "../models/Provider.js";
 
 // Get all provider
 export const getAllProviders = async (req, res) => {
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 5;
   try {
-    const providers = await Provider.find();
+    const providers = await Provider.find()
+      .skip((page - 1) * limit) // Skip documents for previous pages
+      .limit(parseInt(limit)); // Limit the number of documents;;
 
     res.status(200).json({
       length: providers.length,
+      page,
+      limit,
       providers,
     });
   } catch (error) {

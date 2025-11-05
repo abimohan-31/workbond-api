@@ -2,11 +2,17 @@ import Booking from "../models/Booking.js";
 
 // Get all booking
 export const getAllBookings = async (req, res) => {
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 5;
   try {
-    const bookings = await Booking.find();
+    const bookings = await Booking.find()
+      .skip((page - 1) * limit) // Skip documents for previous pages
+      .limit(parseInt(limit)); // Limit the number of documents;;
 
     res.status(200).json({
       length: bookings.length,
+      page,
+      limit,
       bookings,
     });
   } catch (error) {

@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const providerSchema = new mongoose.Schema({
+const customerSchema = new mongoose.Schema({
   name: {
     type: String,
     required: [true, "Name is required"],
@@ -27,26 +27,6 @@ const providerSchema = new mongoose.Schema({
     type: String,
     required: [true, "Address is required"],
   },
-  experience_years: {
-    type: Number,
-    required: [true, "Experience years are required"],
-    min: [1, "Minimum 1 year of experience is required"],
-  },
-  skills: {
-    type: [String],
-    required: [true, "At least one skill is required"],
-  },
-  availability_status: {
-    type: String,
-    enum: ["Available", "Unavailable"],
-    default: "Available",
-  },
-  rating: {
-    type: Number,
-    min: 0,
-    max: 5,
-    default: 0,
-  },
 });
 
-export default mongoose.model("Provider", providerSchema);
+export default mongoose.model("Customer", customerSchema);

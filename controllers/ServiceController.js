@@ -2,11 +2,17 @@ import Service from "../models/Service.js";
 
 // Get all service
 export const getAllServices = async (req, res) => {
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 5;
   try {
-    const services = await Service.find();
+    const services = await Service.find()
+      .skip((page - 1) * limit) // Skip documents for previous pages
+      .limit(parseInt(limit)); // Limit the number of documents;;
 
     res.status(200).json({
       length: services.length,
+      page,
+      limit,
       services,
     });
   } catch (error) {

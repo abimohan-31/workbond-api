@@ -2,11 +2,17 @@ import Review from "../models/Review.js";
 
 // Get all review
 export const getAllReviews = async (req, res) => {
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 5;
   try {
-    const reviews = await Review.find();
+    const reviews = await Review.find()
+      .skip((page - 1) * limit) // Skip documents for previous pages
+      .limit(parseInt(limit)); // Limit the number of documents;;
 
     res.status(200).json({
       length: reviews.length,
+      page,
+      limit,
       reviews,
     });
   } catch (error) {

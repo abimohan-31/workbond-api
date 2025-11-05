@@ -1,11 +1,17 @@
 import Payment from "../models/Payment.js";
 // Get all payment
 export const getAllPayments = async (req, res) => {
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 5;
   try {
-    const payments = await Payment.find();
+    const payments = await Payment.find()
+      .skip((page - 1) * limit) // Skip documents for previous pages
+      .limit(parseInt(limit)); // Limit the number of documents;;
 
     res.status(200).json({
       length: payments.length,
+      page,
+      limit,
       payments,
     });
   } catch (error) {
