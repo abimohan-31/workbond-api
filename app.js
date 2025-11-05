@@ -6,6 +6,7 @@ import bookingRouter from "./routes/BookingRoutes.js";
 import reviewRouter from "./routes/ReviewRoutes.js";
 import paymentRouter from "./routes/PaymentRoutes.js";
 import customerRouter from "./routes/CustomerRoutes.js";
+import { defaultError, notFound } from "./middleware/ErrorHandlers.js";
 
 // Initialized express
 const app = express();
@@ -18,6 +19,12 @@ app.get("/", (req, res) => {
 
 //Connect MongoDB
 connectDB();
+
+//page not found
+app.use(notFound);
+
+//Error Handlers
+app.use(defaultError);
 
 //Routes
 app.use("/api/providers/", providerRouter);
