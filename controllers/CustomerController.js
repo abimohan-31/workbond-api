@@ -5,11 +5,6 @@ export const getAllCustomers = async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 5;
 
-  const match = {};
-  if (req.query.isActive) {
-    match.isActive = req.query.isActive === "true";
-  }
-
   try {
     const customers = await Customer.find(match)
       .skip((page - 1) * limit) // Skip documents for previous pages
