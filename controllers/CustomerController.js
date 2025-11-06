@@ -6,7 +6,7 @@ export const getAllCustomers = async (req, res) => {
   const limit = parseInt(req.query.limit) || 5;
 
   try {
-    const customers = await Customer.find(match)
+    const customers = await Customer.find()
       .skip((page - 1) * limit) // Skip documents for previous pages
       .limit(parseInt(limit)); // Limit the number of documents;
 
