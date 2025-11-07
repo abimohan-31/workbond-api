@@ -1,4 +1,5 @@
 import Booking from "../models/Booking.js";
+import Customer from "../models/Customer.js";
 
 // Get all booking
 export const getAllBookings = async (req, res) => {
@@ -6,16 +7,11 @@ export const getAllBookings = async (req, res) => {
   const limit = parseInt(req.query.limit) || 5;
   try {
     const bookings = await Booking.find()
+      .populate("customer", "name email phone")
+      .populate("provider", "name skills")
       .skip((page - 1) * limit) // Skip documents for previous pages
-      .limit(parseInt(limit)) // Limit the number of documents;;
-      .populate({
-        path: "customer_id",
-        select: "name isActive",
-      })
-      .populate({
-        path: "provider_id",
-        select: "name skills",
-      });
+      .limit(parseInt(limit)); // Limit the number of documents;
+
     res.status(200).json({
       length: bookings.length,
       page,
@@ -32,14 +28,8 @@ export const getBookingById = async (req, res) => {
   try {
     const bookingId = req.params.id;
     const booking = await Booking.findById({ _id: bookingId })
-      .populate({
-        path: "customer_id",
-        select: "name isActive",
-      })
-      .populate({
-        path: "provider_id",
-        select: "name skills",
-      });
+      .populate("customer", "name email phone")
+      .populate("provider", "name skills");
     if (!booking) return res.status(404).json({ Message: "Booking not found" });
 
     res.status(200).json(booking);
@@ -56,7 +46,7 @@ export const createBooking = async (req, res) => {
     const savedBooking = await newBooking.save();
     res.status(200).json({
       Message: "booking created successfully",
-      booking: savedBooking,
+      Booking: savedBooking,
     });
   } catch (error) {
     res.status(500).json({ Error: error.message });

@@ -8,10 +8,7 @@ export const getAllSubscriptions = async (req, res) => {
     const subscriptions = await Subscription.find()
       .skip((page - 1) * limit) // Skip documents for previous pages
       .limit(parseInt(limit)) // Limit the number of documents;;
-      .populate({
-        path: "provider_id",
-        select: "name email",
-      });
+      .populate("provider_id", "name email");
     res.status(200).json({
       length: subscriptions.length,
       page,
@@ -27,7 +24,9 @@ export const getAllSubscriptions = async (req, res) => {
 export const getSubscriptionById = async (req, res) => {
   try {
     const subscriptionId = req.params.id;
-    const subscription = await Subscription.findById({ _id: subscriptionId });
+    const subscription = await Subscription.findById({
+      _id: subscriptionId,
+    }).populate("provider_id", "name email");
 
     if (!subscription)
       return res.status(404).json({ Message: "Subscription not found" });
@@ -83,9 +82,9 @@ export const deleteSubscription = async (req, res) => {
     const subscriptionId = req.params.id;
     const subscription = await Subscription.findByIdAndDelete(subscriptionId);
     if (!subscription)
-      return res.status(404).json({ Message: "subscription not found" });
+      return res.status(404).json({ Message: "Subscription not found" });
     res.status(200).json({
-      Message: "subscription removed successfully",
+      Message: "Subscription removed successfully",
       deletedSubscription: subscription,
     });
   } catch (error) {

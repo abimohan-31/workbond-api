@@ -1,19 +1,22 @@
 import mongoose from "mongoose";
+import Booking from "./Booking.js";
+import Customer from "./Customer.js";
+import Provider from "./Provider.js";
 
 const reviewSchema = new mongoose.Schema({
   booking_id: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "Booking",
+    ref: Booking,
     required: [true, "Booking ID is required"],
   },
   customer_id: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "Customer",
+    ref: Customer,
     required: [true, "Customer ID is required"],
   },
   provider_id: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "Provider",
+    ref: Provider,
     required: [true, "Provider ID is required"],
   },
   rating: {

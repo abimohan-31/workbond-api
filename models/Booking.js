@@ -1,15 +1,16 @@
 import mongoose from "mongoose";
 import Customer from "./Customer.js";
+import Provider from "./Provider.js";
 
 const bookingSchema = new mongoose.Schema({
-  customer_id: {
+  customer: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "Customer",
+    ref: Customer,
     required: [true, "Customer ID is required"],
   },
-  provider_id: {
+  provider: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "Provider",
+    ref: Provider,
     required: [true, "Provider ID is required"],
   },
 

@@ -7,19 +7,10 @@ export const getAllReviews = async (req, res) => {
   try {
     const reviews = await Review.find()
       .skip((page - 1) * limit) // Skip documents for previous pages
-      .limit(parseInt(limit))
-      .populate({
-        path: "customer_id",
-        select: "name isActive",
-      })
-      .populate({
-        path: "provider_id",
-        select: "name skills",
-      })
-      .populate({
-        path: "booking_id",
-        select: "booking_date",
-      }); // Limit the number of documents;;
+      .limit(parseInt(limit)) // Limit the number of documents;;
+      .populate("customer_id", "name isActive")
+      .populate("provider_id", "name skills")
+      .populate("booking_id", "booking_date");
 
     res.status(200).json({
       length: reviews.length,
@@ -36,7 +27,10 @@ export const getAllReviews = async (req, res) => {
 export const getReviewById = async (req, res) => {
   try {
     const reviewId = req.params.id;
-    const review = await Review.findById({ _id: reviewId });
+    const review = await Review.findById({ _id: reviewId })
+      .populate("customer_id", "name isActive")
+      .populate("provider_id", "name skills")
+      .populate("booking_id", "booking_date");
 
     if (!review) return res.status(404).json({ Message: "Review not found" });
 

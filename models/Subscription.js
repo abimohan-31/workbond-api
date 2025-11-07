@@ -1,9 +1,10 @@
 import mongoose from "mongoose";
+import Provider from "./Provider.js";
 
 const subscriptionSchema = new mongoose.Schema({
   provider_id: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "Provider",
+    ref: Provider,
     required: [true, "Provider ID is required"],
   },
   plan_name: {
