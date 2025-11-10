@@ -106,7 +106,10 @@ export const getAllProviders = async (req, res) => {
 export const getProviderById = async (req, res) => {
   try {
     const { id } = req.params;
-    const provider = await Provider.findOne({ _id: id, isApproved: true }).select("-password");
+    const provider = await Provider.findOne({
+      _id: id,
+      isApproved: true,
+    }).select("-password");
 
     if (!provider) {
       return res.status(404).json({
@@ -137,12 +140,16 @@ export const createBooking = async (req, res) => {
     if (!provider || !scheduled_date || !total_amount) {
       return res.status(400).json({
         success: false,
-        message: "All fields are required: provider, scheduled_date, total_amount",
+        message:
+          "All fields are required: provider, scheduled_date, total_amount",
       });
     }
 
     // Verify provider exists and is approved
-    const providerExists = await Provider.findOne({ _id: provider, isApproved: true });
+    const providerExists = await Provider.findOne({
+      _id: provider,
+      isApproved: true,
+    });
     if (!providerExists) {
       return res.status(404).json({
         success: false,
@@ -321,7 +328,8 @@ export const createReview = async (req, res) => {
     if (!booking_id || !provider_id || !rating || !comment) {
       return res.status(400).json({
         success: false,
-        message: "All fields are required: booking_id, provider_id, rating, comment",
+        message:
+          "All fields are required: booking_id, provider_id, rating, comment",
       });
     }
 

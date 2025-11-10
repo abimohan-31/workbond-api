@@ -2,12 +2,12 @@ import express from "express";
 import { authenticate } from "../middleware/authMiddleware.js";
 import { authorize } from "../middleware/authorizeMiddleware.js";
 import {
-	register,
-	login,
-	createUser,
-	getUserById,
-	updateUser,
-	deleteUser,
+  register,
+  login,
+  createUser,
+  getUserById,
+  updateUser,
+  deleteUser,
 } from "../controllers/UsersController.js";
 
 const usersRouter = express.Router();
@@ -25,5 +25,3 @@ usersRouter.put("/:id", authenticate, updateUser);
 usersRouter.delete("/:id", authenticate, authorize("admin"), deleteUser);
 
 export default usersRouter;
-
-

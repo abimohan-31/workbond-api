@@ -1,13 +1,13 @@
 import express from "express";
-import connectDB from "./config/db.js";
+import connectDB from './src/config/db.js';
 import cors from "cors";
-import { defaultError, notFound } from "./middleware/ErrorHandlers.js";
+import { defaultError, notFound } from "./src/middleware/ErrorHandlers.js";
 
 // Import route groups
 import usersRouter from "./src/routes/usersRoutes.js";
-import adminRouter from "./routes/adminRoutes.js";
-import providerRouter from "./routes/providerRoutes.js";
-import customerRouter from "./routes/customerRoutes.js";
+import adminRouter from "./src/routes/adminRoutes.js";
+import providerRouter from "./src/routes/providerRoutes.js";
+import customerRouter from "./src/routes/customerRoutes.js";
 
 // Initialize express
 const app = express();

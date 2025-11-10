@@ -129,7 +129,8 @@ export const approveProvider = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: "Provider approved successfully. The provider can now log in and access all provider features.",
+      message:
+        "Provider approved successfully. The provider can now log in and access all provider features.",
       data: {
         provider: providerData,
       },
@@ -164,7 +165,7 @@ export const rejectProvider = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: reason 
+      message: reason
         ? `Provider rejected successfully. Reason: ${reason}`
         : "Provider rejected successfully. The provider can no longer access provider features.",
       data: {
@@ -414,4 +415,3 @@ export const getAllReviews = async (req, res) => {
     });
   }
 };
-
