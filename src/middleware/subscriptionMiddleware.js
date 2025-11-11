@@ -6,6 +6,7 @@ export const checkSubscription = async (req, res, next) => {
     if (!req.user || req.user.role !== "provider") {
       return res.status(403).json({
         success: false,
+        statusCode: 403,
         message: "This route is only accessible to providers.",
       });
     }
@@ -20,6 +21,7 @@ export const checkSubscription = async (req, res, next) => {
     if (!subscription) {
       return res.status(403).json({
         success: false,
+        statusCode: 403,
         message: "Access denied. Active subscription required.",
       });
     }
@@ -30,8 +32,8 @@ export const checkSubscription = async (req, res, next) => {
   } catch (error) {
     return res.status(500).json({
       success: false,
+      statusCode: 500,
       message: "Error checking subscription.",
     });
   }
 };
-

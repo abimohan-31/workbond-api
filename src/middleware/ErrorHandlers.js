@@ -11,7 +11,8 @@ export const notFound = (req, res, next) => {
 
 // Default error handler
 export const defaultError = (err, req, res, next) => {
-  let statusCode = res.statusCode && res.statusCode !== 200 ? res.statusCode : 500;
+  let statusCode =
+    res.statusCode && res.statusCode !== 200 ? res.statusCode : 500;
   let message = err.message || "Internal Server Error";
   let errors = undefined;
 
@@ -19,8 +20,8 @@ export const defaultError = (err, req, res, next) => {
   if (err.code === 11000) {
     statusCode = 400;
     const field = Object.keys(err.keyPattern || {})[0];
-    message = "Duplicate key error";
-    errors = [{ field, message: "already exists" }];
+    message = `${field} already exists`;
+    errors = [{ field, message: `${field} already exists` }];
   }
 
   // Handle MongoDB validation errors
@@ -36,7 +37,7 @@ export const defaultError = (err, req, res, next) => {
   // Handle MongoDB cast errors (invalid ObjectId)
   if (err.name === "CastError") {
     statusCode = 404;
-    message = "Resource not found";
+    message = "Invalid ID format";
   }
 
   // Handle JWT errors
@@ -54,7 +55,7 @@ export const defaultError = (err, req, res, next) => {
     success: false,
     statusCode,
     message,
-    ...(errors ? { errors } : {}),
+    ...(errors && errors.length > 0 ? { errors } : {}),
     ...(process.env.NODE_ENV === "development" && { stack: err.stack }),
   });
 };
