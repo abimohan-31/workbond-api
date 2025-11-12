@@ -4,7 +4,6 @@ import dotenv from "dotenv";
 // Import models
 import User from "./src/models/User.js";
 
-
 // Load environment variables
 dotenv.config();
 
@@ -84,7 +83,7 @@ const seedDatabase = async () => {
     console.log("" + "=".repeat(50));
     console.log(" Seeding Summary:");
     console.log("=".repeat(50));
-    console.log(` Admin: 1`);
+    console.log(`Admin: 1`);
     console.log("=".repeat(50));
     console.log(" Database seeded successfully!");
     console.log(" Test Credentials:");
@@ -96,7 +95,7 @@ const seedDatabase = async () => {
     console.log("Database connection closed.");
     process.exit(0);
   } catch (error) {
-    console.error(" Error during seeding:", error);
+    console.error("Error during seeding:", error);
     await mongoose.connection.close();
     process.exit(1);
   }

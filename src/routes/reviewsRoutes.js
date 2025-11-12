@@ -16,22 +16,12 @@ reviewsRouter.get("/:id", getReviewById);
 
 // Protected routes (require authentication)
 // Create, update, delete routes (customer or provider)
-reviewsRouter.post(
-  "/",
-  verifyToken,
-  verifyRole("customer", "provider"),
-  createReview
-);
-reviewsRouter.put(
-  "/:id",
-  verifyToken,
-  verifyRole("customer", "provider", "admin"),
-  updateReview
-);
+reviewsRouter.post("/", verifyToken, verifyRole("customer"), createReview);
+reviewsRouter.put("/:id", verifyToken, verifyRole("customer"), updateReview);
 reviewsRouter.delete(
   "/:id",
   verifyToken,
-  verifyRole("customer", "provider", "admin"),
+  verifyRole("customer", "admin"),
   deleteReview
 );
 

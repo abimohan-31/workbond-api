@@ -8,7 +8,7 @@ import {
   updateUser,
   deleteUser,
   createUser,
-} from "../controllers/usersController.js";
+} from "../controllers/authController.js";
 
 const usersRouter = express.Router();
 

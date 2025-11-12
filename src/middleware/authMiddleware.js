@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 import Provider from "../models/Provider.js";
 import Customer from "../models/Customer.js";
-import User from "../models/User.js";
+import User from "../models/Auth.js";
 import TokenBlacklist from "../models/TokenBlacklist.js";
 
 // Verify JWT token middleware

@@ -1,5 +1,5 @@
 import jwt from "jsonwebtoken";
-import User from "../models/User.js";
+import User from "../models/Auth.js";
 import Provider from "../models/Provider.js";
 import Customer from "../models/Customer.js";
 import TokenBlacklist from "../models/TokenBlacklist.js";
@@ -67,8 +67,6 @@ export const register = async (req, res, next) => {
 
     // Handle customer registration
     if (role === "customer") {
-     
-
       const existingCustomer = await Customer.findOne({ email });
       if (existingCustomer) {
         return res.status(400).json({
