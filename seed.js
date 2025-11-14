@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import dotenv from "dotenv";
 
 // Import models
-import User from "./src/models/User.js";
+import User from "./src/models/Auth.js";
 
 // Load environment variables
 dotenv.config();
@@ -32,10 +32,6 @@ const clearCollections = async () => {
   try {
     console.log("Clearing existing data...");
     await User.deleteMany({});
-    await Provider.deleteMany({});
-    await Customer.deleteMany({});
-    await Subscription.deleteMany({});
-    await Review.deleteMany({});
     console.log("Collections cleared successfully!");
   } catch (error) {
     console.error("Error clearing collections:", error);
@@ -50,13 +46,13 @@ const seedAdmin = async () => {
 
     const admin = new User({
       name: "Admin User",
-      email: "admin@example.com",
-      password: "admin123", // Will be hashed by pre-save hook
+      email: "admin@gmail.com",
+      password: "admin0004", // Will be hashed by pre-save hook
       role: "admin",
     });
 
     await admin.save();
-    console.log(`Admin created: ${admin.email} (password: admin123)`);
+    console.log(`Admin created: ${admin.email} (password: admin0004)`);
     return admin;
   } catch (error) {
     console.error("Error seeding admin:", error);
@@ -87,7 +83,7 @@ const seedDatabase = async () => {
     console.log("=".repeat(50));
     console.log(" Database seeded successfully!");
     console.log(" Test Credentials:");
-    console.log("Admin: admin@example.com / admin123");
+    console.log(" Admin : admin@gmail.com /admin0004");
     console.log("");
 
     // Close connection
