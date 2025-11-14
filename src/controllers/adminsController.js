@@ -1,6 +1,6 @@
 import Provider from "../models/Provider.js";
 import Customer from "../models/Customer.js";
-import User from "../models/User.js";
+import User from "../models/Auth.js";
 import Subscription from "../models/Subscription.js";
 import Review from "../models/Review.js";
 

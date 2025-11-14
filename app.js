@@ -4,13 +4,13 @@ import cors from "cors";
 import { defaultError, notFound } from "./src/middleware/ErrorHandlers.js";
 
 // Import route groups
-import usersRouter from "./src/routes/usersRoutes.js";
 import adminsRouter from "./src/routes/adminsRoutes.js";
 import customersRouter from "./src/routes/customersRoutes.js";
 import providersRouter from "./src/routes/providersRoutes.js";
 import subscriptionsRouter from "./src/routes/subscriptionsRoutes.js";
 import reviewsRouter from "./src/routes/reviewsRoutes.js";
 import servicesRouter from "./src/routes/servicesRoutes.js";
+import usersRouter from "./src/routes/authRoutes.js";
 
 // Initialize express
 const app = express();
@@ -27,6 +27,7 @@ app.get("/", (req, res) => {
 
 // Connect MongoDB
 connectDB();
+
 
 // API Routes
 app.use("/api/users", usersRouter);
