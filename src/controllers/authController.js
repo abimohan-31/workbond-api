@@ -72,7 +72,7 @@ export const register = async (req, res, next) => {
         return res.status(400).json({
           success: false,
           statusCode: 400,
-          message: "Customer with this email already exists",
+          message: "Entry with this email already exists",
         });
       }
 
@@ -93,7 +93,7 @@ export const register = async (req, res, next) => {
       return res.status(201).json({
         success: true,
         statusCode: 201,
-        message: "Customer registered successfully",
+        message: "You registered successfully",
         data: {
           user: customerData,
           token,
@@ -151,7 +151,7 @@ export const register = async (req, res, next) => {
         return res.status(400).json({
           success: false,
           statusCode: 400,
-          message: "Provider with this email already exists",
+          message: "Entry with this email already exists",
         });
       }
 
@@ -176,7 +176,7 @@ export const register = async (req, res, next) => {
         success: true,
         statusCode: 201,
         message:
-          "Provider registered successfully. Your account is pending admin approval.",
+          "You registered successfully. Your account is pending admin approval.",
         data: {
           user: providerData,
           isApproved: false,
