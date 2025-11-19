@@ -2,10 +2,22 @@ import Provider from "../models/Provider.js";
 import Subscription from "../models/Subscription.js";
 import Review from "../models/Review.js";
 
-// GET /api/providers/check-approval - Check approval status (no approval required)
+// GET /api/providers/check-approval/:id - Check approval status by provider ID (public route)
+// Allows providers to check their approval status without authentication
 export const checkApprovalStatus = async (req, res, next) => {
   try {
-    const provider = await Provider.findById(req.user.id).select("-password");
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        statusCode: 400,
+        message: "Provider ID is required",
+        errors: [{ field: "id", message: "Provider ID is required" }],
+      });
+    }
+
+    const provider = await Provider.findById(id).select("-password");
 
     if (!provider) {
       return res.status(404).json({
@@ -15,14 +27,21 @@ export const checkApprovalStatus = async (req, res, next) => {
       });
     }
 
+    // Determine status message
+    let statusMessage = "";
+    if (provider.isApproved) {
+      statusMessage = "Your account is approved. You can now log in and access all provider features.";
+    } else {
+      statusMessage = "Your account is pending approval. Please wait for admin approval before you can log in.";
+    }
+
     return res.status(200).json({
       success: true,
       statusCode: 200,
       data: {
         isApproved: provider.isApproved,
-        message: provider.isApproved
-          ? "Your account is approved. You can access all provider features."
-          : "Your account is pending approval. Please wait for admin approval.",
+        status: provider.isApproved ? "Approved" : "Pending",
+        message: statusMessage,
         provider: {
           _id: provider._id,
           name: provider.name,
