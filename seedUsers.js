@@ -475,44 +475,187 @@ const seedServices = async () => {
     console.log("Seeding Services...");
 
     const services = [
+      // Painting Services
       {
-        name: "painting",
-        description: "Professional painting services for homes and offices",
+        name: "interior painting",
+        description: "Professional interior painting services for homes and offices",
         category: "Painting",
-        base_price: 5000, // LKR per hour
+        base_price: 5000,
         unit: "hour",
         isActive: true,
       },
       {
-        name: "gardening",
-        description: "Expert gardening and landscaping services",
+        name: "exterior painting",
+        description: "Expert exterior painting and weatherproofing services",
+        category: "Painting",
+        base_price: 6000,
+        unit: "hour",
+        isActive: true,
+      },
+      {
+        name: "wall painting",
+        description: "Wall painting and touch-up services",
+        category: "Painting",
+        base_price: 4500,
+        unit: "hour",
+        isActive: true,
+      },
+      
+      // Gardening Services
+      {
+        name: "garden maintenance",
+        description: "Regular garden maintenance and lawn care services",
         category: "Gardening",
-        base_price: 4000, // LKR per hour
+        base_price: 4000,
         unit: "hour",
         isActive: true,
       },
       {
-        name: "cleaning",
-        description: "Thorough cleaning services for residential and commercial spaces",
+        name: "landscaping",
+        description: "Complete landscaping and garden design services",
+        category: "Gardening",
+        base_price: 8000,
+        unit: "hour",
+        isActive: true,
+      },
+      {
+        name: "tree trimming",
+        description: "Professional tree trimming and pruning services",
+        category: "Gardening",
+        base_price: 5000,
+        unit: "hour",
+        isActive: true,
+      },
+      
+      // Cleaning Services
+      {
+        name: "house cleaning",
+        description: "Comprehensive house cleaning services for residential spaces",
         category: "Cleaning",
-        base_price: 3000, // LKR per hour
+        base_price: 3000,
         unit: "hour",
         isActive: true,
       },
       {
-        name: "plumbing",
-        description: "Professional plumbing repairs and installations",
+        name: "deep cleaning",
+        description: "Thorough deep cleaning services for homes and offices",
+        category: "Cleaning",
+        base_price: 4000,
+        unit: "hour",
+        isActive: true,
+      },
+      {
+        name: "carpet cleaning",
+        description: "Professional carpet and upholstery cleaning services",
+        category: "Cleaning",
+        base_price: 3500,
+        unit: "hour",
+        isActive: true,
+      },
+      {
+        name: "window cleaning",
+        description: "Window and glass cleaning services for residential and commercial",
+        category: "Cleaning",
+        base_price: 2500,
+        unit: "hour",
+        isActive: true,
+      },
+      
+      // Plumbing Services
+      {
+        name: "plumbing repair",
+        description: "Professional plumbing repairs and maintenance",
         category: "Plumbing",
-        base_price: 6000, // LKR per hour
+        base_price: 6000,
         unit: "hour",
         isActive: true,
       },
       {
-        name: "electrical",
-        description: "Licensed electrical work and repairs",
-        category: "Electrical",
-        base_price: 7000, // LKR per hour
+        name: "pipe installation",
+        description: "New pipe installation and replacement services",
+        category: "Plumbing",
+        base_price: 7000,
         unit: "hour",
+        isActive: true,
+      },
+      {
+        name: "leak fixing",
+        description: "Water leak detection and fixing services",
+        category: "Plumbing",
+        base_price: 5500,
+        unit: "hour",
+        isActive: true,
+      },
+      
+      // Electrical Services
+      {
+        name: "electrical repair",
+        description: "Licensed electrical repairs and troubleshooting",
+        category: "Electrical",
+        base_price: 7000,
+        unit: "hour",
+        isActive: true,
+      },
+      {
+        name: "wiring installation",
+        description: "New electrical wiring and installation services",
+        category: "Electrical",
+        base_price: 8000,
+        unit: "hour",
+        isActive: true,
+      },
+      {
+        name: "electrical maintenance",
+        description: "Regular electrical maintenance and safety checks",
+        category: "Electrical",
+        base_price: 6500,
+        unit: "hour",
+        isActive: true,
+      },
+      
+      // Carpentry Services
+      {
+        name: "furniture repair",
+        description: "Professional furniture repair and restoration services",
+        category: "Carpentry",
+        base_price: 5000,
+        unit: "hour",
+        isActive: true,
+      },
+      {
+        name: "cabinet installation",
+        description: "Custom cabinet and shelf installation services",
+        category: "Carpentry",
+        base_price: 6000,
+        unit: "hour",
+        isActive: true,
+      },
+      
+      // Handyman Services
+      {
+        name: "general handyman",
+        description: "General handyman services for various home repairs",
+        category: "Handyman",
+        base_price: 4000,
+        unit: "hour",
+        isActive: true,
+      },
+      {
+        name: "appliance repair",
+        description: "Home appliance repair and maintenance services",
+        category: "Handyman",
+        base_price: 5000,
+        unit: "hour",
+        isActive: true,
+      },
+      
+      // Moving Services
+      {
+        name: "house moving",
+        description: "Professional house moving and relocation services",
+        category: "Moving",
+        base_price: 10000,
+        unit: "day",
         isActive: true,
       },
     ];
@@ -531,99 +674,288 @@ const seedPriceLists = async (services) => {
   try {
     console.log("Seeding Price Lists...");
 
-    const paintingService = services.find((s) => s.name === "painting");
-    const gardeningService = services.find((s) => s.name === "gardening");
-    const cleaningService = services.find((s) => s.name === "cleaning");
-    const plumbingService = services.find((s) => s.name === "plumbing");
-    const electricalService = services.find((s) => s.name === "electrical");
-
     const priceLists = [];
 
-    // Paint: price per square foot
-    if (paintingService) {
+    // Helper function to find service by name
+    const findService = (name) => services.find((s) => s.name === name);
+
+    // Painting Services
+    const interiorPainting = findService("interior painting");
+    if (interiorPainting) {
       priceLists.push({
-        service_id: paintingService._id,
+        service_id: interiorPainting._id,
         price_type: "per_unit",
-        unit_price: 250, // Rs. 250 per square foot
+        unit_price: 250,
         unit: "square_feet",
         description: "Price per square foot for interior painting (LKR)",
         isActive: true,
       });
+    }
+
+    const exteriorPainting = findService("exterior painting");
+    if (exteriorPainting) {
       priceLists.push({
-        service_id: paintingService._id,
+        service_id: exteriorPainting._id,
         price_type: "per_unit",
-        unit_price: 300, // Rs. 300 per square foot
+        unit_price: 300,
         unit: "square_feet",
         description: "Price per square foot for exterior painting (LKR)",
         isActive: true,
       });
     }
 
-    // Gardening: average price range
-    if (gardeningService) {
+    const wallPainting = findService("wall painting");
+    if (wallPainting) {
       priceLists.push({
-        service_id: gardeningService._id,
+        service_id: wallPainting._id,
+        price_type: "per_unit",
+        unit_price: 200,
+        unit: "square_feet",
+        description: "Price per square foot for wall painting (LKR)",
+        isActive: true,
+      });
+    }
+
+    // Gardening Services
+    const gardenMaintenance = findService("garden maintenance");
+    if (gardenMaintenance) {
+      priceLists.push({
+        service_id: gardenMaintenance._id,
         price_type: "range",
         min_price: 5000,
         max_price: 15000,
-        description: "Average price range for basic gardening services per visit (LKR)",
+        description: "Price range for garden maintenance per visit (LKR)",
         isActive: true,
       });
+    }
+
+    const landscaping = findService("landscaping");
+    if (landscaping) {
       priceLists.push({
-        service_id: gardeningService._id,
+        service_id: landscaping._id,
         price_type: "range",
         min_price: 20000,
-        max_price: 50000,
-        description: "Price range for full landscaping projects (LKR)",
+        max_price: 100000,
+        description: "Price range for complete landscaping projects (LKR)",
         isActive: true,
       });
     }
 
-    // Cleaning: fixed price
-    if (cleaningService) {
+    const treeTrimming = findService("tree trimming");
+    if (treeTrimming) {
       priceLists.push({
-        service_id: cleaningService._id,
+        service_id: treeTrimming._id,
+        price_type: "fixed",
+        fixed_price: 8000,
+        description: "Fixed price per tree for trimming service (LKR)",
+        isActive: true,
+      });
+    }
+
+    // Cleaning Services
+    const houseCleaning = findService("house cleaning");
+    if (houseCleaning) {
+      priceLists.push({
+        service_id: houseCleaning._id,
         price_type: "fixed",
         fixed_price: 10000,
-        description: "Standard cleaning service for small apartments (1-2 bedrooms) - LKR",
+        description: "Standard house cleaning for small apartments (1-2 bedrooms) - LKR",
         isActive: true,
       });
       priceLists.push({
-        service_id: cleaningService._id,
+        service_id: houseCleaning._id,
         price_type: "fixed",
         fixed_price: 15000,
-        description: "Deep cleaning service for medium homes (3-4 bedrooms) - LKR",
+        description: "Standard house cleaning for medium homes (3-4 bedrooms) - LKR",
         isActive: true,
       });
     }
 
-    // Plumbing: per unit (per hour)
-    if (plumbingService) {
+    const deepCleaning = findService("deep cleaning");
+    if (deepCleaning) {
       priceLists.push({
-        service_id: plumbingService._id,
+        service_id: deepCleaning._id,
+        price_type: "fixed",
+        fixed_price: 20000,
+        description: "Deep cleaning service for small apartments (LKR)",
+        isActive: true,
+      });
+      priceLists.push({
+        service_id: deepCleaning._id,
+        price_type: "fixed",
+        fixed_price: 30000,
+        description: "Deep cleaning service for large homes (LKR)",
+        isActive: true,
+      });
+    }
+
+    const carpetCleaning = findService("carpet cleaning");
+    if (carpetCleaning) {
+      priceLists.push({
+        service_id: carpetCleaning._id,
+        price_type: "per_unit",
+        unit_price: 1500,
+        unit: "square_feet",
+        description: "Price per square foot for carpet cleaning (LKR)",
+        isActive: true,
+      });
+    }
+
+    const windowCleaning = findService("window cleaning");
+    if (windowCleaning) {
+      priceLists.push({
+        service_id: windowCleaning._id,
+        price_type: "fixed",
+        fixed_price: 3000,
+        description: "Fixed price per window for cleaning service (LKR)",
+        isActive: true,
+      });
+    }
+
+    // Plumbing Services
+    const plumbingRepair = findService("plumbing repair");
+    if (plumbingRepair) {
+      priceLists.push({
+        service_id: plumbingRepair._id,
         price_type: "per_unit",
         unit_price: 8000,
         unit: "hour",
-        description: "Standard plumbing service rate per hour (LKR)",
+        description: "Plumbing repair service rate per hour (LKR)",
         isActive: true,
       });
     }
 
-    // Electrical: fixed price for common jobs
-    if (electricalService) {
+    const pipeInstallation = findService("pipe installation");
+    if (pipeInstallation) {
       priceLists.push({
-        service_id: electricalService._id,
+        service_id: pipeInstallation._id,
+        price_type: "per_unit",
+        unit_price: 1000,
+        unit: "item",
+        description: "Price per meter for pipe installation (LKR)",
+        isActive: true,
+      });
+    }
+
+    const leakFixing = findService("leak fixing");
+    if (leakFixing) {
+      priceLists.push({
+        service_id: leakFixing._id,
         price_type: "fixed",
-        fixed_price: 12000,
-        description: "Fixed price for standard electrical outlet installation (LKR)",
+        fixed_price: 5000,
+        description: "Fixed price for basic leak fixing (LKR)",
         isActive: true,
       });
       priceLists.push({
-        service_id: electricalService._id,
+        service_id: leakFixing._id,
+        price_type: "fixed",
+        fixed_price: 15000,
+        description: "Fixed price for complex leak fixing (LKR)",
+        isActive: true,
+      });
+    }
+
+    // Electrical Services
+    const electricalRepair = findService("electrical repair");
+    if (electricalRepair) {
+      priceLists.push({
+        service_id: electricalRepair._id,
         price_type: "per_unit",
         unit_price: 9000,
         unit: "hour",
         description: "Electrical repair service rate per hour (LKR)",
+        isActive: true,
+      });
+    }
+
+    const wiringInstallation = findService("wiring installation");
+    if (wiringInstallation) {
+      priceLists.push({
+        service_id: wiringInstallation._id,
+        price_type: "per_unit",
+        unit_price: 1200,
+        unit: "item",
+        description: "Price per point for wiring installation (LKR)",
+        isActive: true,
+      });
+    }
+
+    const electricalMaintenance = findService("electrical maintenance");
+    if (electricalMaintenance) {
+      priceLists.push({
+        service_id: electricalMaintenance._id,
+        price_type: "fixed",
+        fixed_price: 15000,
+        description: "Fixed price for electrical safety check and maintenance (LKR)",
+        isActive: true,
+      });
+    }
+
+    // Carpentry Services
+    const furnitureRepair = findService("furniture repair");
+    if (furnitureRepair) {
+      priceLists.push({
+        service_id: furnitureRepair._id,
+        price_type: "range",
+        min_price: 3000,
+        max_price: 15000,
+        description: "Price range for furniture repair based on item size (LKR)",
+        isActive: true,
+      });
+    }
+
+    const cabinetInstallation = findService("cabinet installation");
+    if (cabinetInstallation) {
+      priceLists.push({
+        service_id: cabinetInstallation._id,
+        price_type: "per_unit",
+        unit_price: 5000,
+        unit: "item",
+        description: "Price per cabinet for installation (LKR)",
+        isActive: true,
+      });
+    }
+
+    // Handyman Services
+    const generalHandyman = findService("general handyman");
+    if (generalHandyman) {
+      priceLists.push({
+        service_id: generalHandyman._id,
+        price_type: "per_unit",
+        unit_price: 4000,
+        unit: "hour",
+        description: "General handyman service rate per hour (LKR)",
+        isActive: true,
+      });
+    }
+
+    const applianceRepair = findService("appliance repair");
+    if (applianceRepair) {
+      priceLists.push({
+        service_id: applianceRepair._id,
+        price_type: "fixed",
+        fixed_price: 5000,
+        description: "Fixed price for basic appliance repair (LKR)",
+        isActive: true,
+      });
+      priceLists.push({
+        service_id: applianceRepair._id,
+        price_type: "fixed",
+        fixed_price: 15000,
+        description: "Fixed price for complex appliance repair (LKR)",
+        isActive: true,
+      });
+    }
+
+    // Moving Services
+    const houseMoving = findService("house moving");
+    if (houseMoving) {
+      priceLists.push({
+        service_id: houseMoving._id,
+        price_type: "range",
+        min_price: 15000,
+        max_price: 50000,
+        description: "Price range for house moving based on distance and items (LKR)",
         isActive: true,
       });
     }
@@ -687,9 +1019,14 @@ async function seedUsers() {
     console.log("Seed successfully completed");
     console.log("");
     console.log("Example Price Lists:");
-    console.log(" - Painting: Rs. 250-300 per square foot");
-    console.log(" - Gardening: Rs. 5,000-15,000 (basic) or Rs. 20,000-50,000 (landscaping)");
-    console.log(" - Cleaning: Rs. 10,000-15,000 fixed price");
+    console.log(" - Painting: Rs. 200-300 per square foot");
+    console.log(" - Gardening: Rs. 5,000-15,000 (maintenance) or Rs. 20,000-100,000 (landscaping)");
+    console.log(" - Cleaning: Rs. 10,000-30,000 (house/deep cleaning)");
+    console.log(" - Plumbing: Rs. 5,000-15,000 (leak fixing) or Rs. 8,000/hour (repairs)");
+    console.log(" - Electrical: Rs. 9,000/hour (repairs) or Rs. 15,000 (maintenance)");
+    console.log(" - Carpentry: Rs. 3,000-15,000 (furniture repair) or Rs. 5,000/cabinet");
+    console.log(" - Handyman: Rs. 4,000/hour (general) or Rs. 5,000-15,000 (appliance repair)");
+    console.log(" - Moving: Rs. 15,000-50,000 (based on distance and items)");
     console.log("");
 
     process.exit();
@@ -700,3 +1037,4 @@ async function seedUsers() {
 }
 
 seedUsers();
+
