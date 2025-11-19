@@ -8,6 +8,7 @@ import Customer from "./src/models/Customer.js";
 import Service from "./src/models/Service.js";
 import PriceList from "./src/models/PriceList.js";
 import Review from "./src/models/Review.js";
+import JobPost from "./src/models/JobPost.js";
 
 dotenv.config();
 
@@ -1062,6 +1063,248 @@ const seedReviews = async (providers, customers) => {
   }
 };
 
+// Seed Job Posts
+const seedJobPosts = async (customers, services) => {
+  try {
+    console.log("Seeding Job Posts...");
+
+    const jobPosts = [];
+
+    // Helper function to get random element from array
+    const getRandom = (arr) => arr[Math.floor(Math.random() * arr.length)];
+
+    // Job post templates
+    const jobTemplates = [
+      {
+        title: "Need Interior Painting for 3-Bedroom House",
+        description:
+          "Looking for an experienced painter to paint the interior of my 3-bedroom house. All rooms need fresh paint. Prefer light colors.",
+        duration: "2 weeks",
+        serviceName: "interior painting",
+        location: "Colombo",
+      },
+      {
+        title: "Garden Maintenance Service Required",
+        description:
+          "Need regular garden maintenance service for my home garden. Includes lawn mowing, weeding, and plant care.",
+        duration: "1 month",
+        serviceName: "garden maintenance",
+        location: "Kandy",
+      },
+      {
+        title: "Deep Cleaning Service for Office",
+        description:
+          "Require deep cleaning service for a small office space. Need thorough cleaning of all areas including carpets.",
+        duration: "1 day",
+        serviceName: "deep cleaning",
+        location: "Gampaha",
+      },
+      {
+        title: "Plumbing Repair - Leaky Faucets",
+        description:
+          "Multiple faucets in the house are leaking. Need professional plumber to fix all leaks and check water pressure.",
+        duration: "1 day",
+        serviceName: "plumbing repair",
+        location: "Negombo",
+      },
+      {
+        title: "Electrical Wiring Installation",
+        description:
+          "Need new electrical wiring for home extension. Requires licensed electrician for safe installation.",
+        duration: "1 week",
+        serviceName: "wiring installation",
+        location: "Matara",
+      },
+      {
+        title: "House Cleaning - Weekly Service",
+        description:
+          "Looking for regular weekly house cleaning service. 2-bedroom apartment needs cleaning every week.",
+        duration: "3 months",
+        serviceName: "house cleaning",
+        location: "Colombo",
+      },
+      {
+        title: "Exterior Painting - Weatherproofing",
+        description:
+          "Need exterior painting and weatherproofing for house exterior. Includes preparation and primer application.",
+        duration: "2 weeks",
+        serviceName: "exterior painting",
+        location: "Kurunegala",
+      },
+      {
+        title: "Tree Trimming and Pruning",
+        description:
+          "Large trees in garden need trimming and pruning. Some branches are overhanging the roof.",
+        duration: "1 day",
+        serviceName: "tree trimming",
+        location: "Galle",
+      },
+      {
+        title: "Carpet Cleaning Service",
+        description:
+          "Need professional carpet cleaning for living room and bedrooms. Carpets are heavily soiled.",
+        duration: "1 day",
+        serviceName: "carpet cleaning",
+        location: "Ratnapura",
+      },
+      {
+        title: "Window Cleaning - Commercial Building",
+        description:
+          "Window cleaning service required for 3-story commercial building. All windows need cleaning inside and out.",
+        duration: "3 days",
+        serviceName: "window cleaning",
+        location: "Colombo",
+      },
+      {
+        title: "Pipe Installation - New Construction",
+        description:
+          "New pipe installation needed for kitchen and bathroom in new construction. Requires experienced plumber.",
+        duration: "1 week",
+        serviceName: "pipe installation",
+        location: "Anuradhapura",
+      },
+      {
+        title: "Leak Fixing - Multiple Locations",
+        description:
+          "Water leaks detected in multiple locations. Need urgent leak detection and fixing service.",
+        duration: "2 days",
+        serviceName: "leak fixing",
+        location: "Kandy",
+      },
+      {
+        title: "Electrical Repair - Power Issues",
+        description:
+          "Experiencing power issues in several rooms. Need licensed electrician to diagnose and repair electrical problems.",
+        duration: "2 days",
+        serviceName: "electrical repair",
+        location: "Gampaha",
+      },
+      {
+        title: "Electrical Maintenance Check",
+        description:
+          "Annual electrical safety check and maintenance required. Need comprehensive inspection of all electrical systems.",
+        duration: "1 day",
+        serviceName: "electrical maintenance",
+        location: "Negombo",
+      },
+      {
+        title: "Furniture Repair Service",
+        description:
+          "Several pieces of furniture need repair and restoration. Includes chairs, tables, and cabinets.",
+        duration: "1 week",
+        serviceName: "furniture repair",
+        location: "Matara",
+      },
+      {
+        title: "Cabinet Installation - Kitchen",
+        description:
+          "Need custom cabinet installation in kitchen. Requires skilled carpenter for proper fitting and installation.",
+        duration: "1 week",
+        serviceName: "cabinet installation",
+        location: "Colombo",
+      },
+      {
+        title: "General Handyman - Multiple Repairs",
+        description:
+          "Multiple small repairs needed around the house. Looking for experienced handyman for various tasks.",
+        duration: "1 week",
+        serviceName: "general handyman",
+        location: "Kandy",
+      },
+      {
+        title: "Appliance Repair - Washing Machine",
+        description:
+          "Washing machine not working properly. Need experienced technician to diagnose and repair the issue.",
+        duration: "1 day",
+        serviceName: "appliance repair",
+        location: "Gampaha",
+      },
+      {
+        title: "Landscaping Project - Garden Design",
+        description:
+          "Complete landscaping project for new garden. Need design and implementation of garden layout with plants and features.",
+        duration: "1 month",
+        serviceName: "landscaping",
+        location: "Colombo",
+      },
+      {
+        title: "House Moving Service",
+        description:
+          "Need professional house moving service for relocation. Includes packing, transportation, and unpacking.",
+        duration: "2 days",
+        serviceName: "house moving",
+        location: "Colombo",
+      },
+    ];
+
+    // Create job posts with mix of statuses
+    const statuses = ["Pending", "Approved", "Rejected"];
+    const statusWeights = [0.4, 0.5, 0.1]; // 40% pending, 50% approved, 10% rejected
+
+    for (const template of jobTemplates) {
+      // Find matching service
+      const service = services.find(
+        (s) => s.name.toLowerCase() === template.serviceName.toLowerCase()
+      );
+
+      if (!service) continue;
+
+      // Select random customer
+      const customer = getRandom(customers);
+
+      // Select status based on weights
+      const random = Math.random();
+      let status = "Pending";
+      if (random < statusWeights[0]) {
+        status = "Pending";
+      } else if (random < statusWeights[0] + statusWeights[1]) {
+        status = "Approved";
+      } else {
+        status = "Rejected";
+      }
+
+      jobPosts.push({
+        title: template.title,
+        description: template.description,
+        duration: template.duration,
+        service_id: service._id,
+        location: template.location,
+        posted_by: customer._id,
+        status: status,
+        applied_providers: [], // Start with no applications
+      });
+    }
+
+    const createdJobPosts = await JobPost.insertMany(jobPosts);
+    console.log(`${createdJobPosts.length} job posts created`);
+
+    // Add some provider applications to approved job posts
+    const approvedJobPosts = createdJobPosts.filter(
+      (jp) => jp.status === "Approved"
+    );
+    const allProviders = await Provider.find({ isApproved: true }).select("_id");
+
+    // Add random applications to some approved jobs
+    for (let i = 0; i < Math.min(10, approvedJobPosts.length); i++) {
+      const jobPost = approvedJobPosts[i];
+      const numApplications = Math.floor(Math.random() * 3) + 1; // 1-3 applications
+
+      for (let j = 0; j < numApplications; j++) {
+        const provider = getRandom(allProviders);
+        if (!jobPost.applied_providers.includes(provider._id)) {
+          jobPost.applied_providers.push(provider._id);
+        }
+      }
+      await jobPost.save();
+    }
+
+    return createdJobPosts;
+  } catch (error) {
+    console.error("Error seeding job posts:", error);
+    throw error;
+  }
+};
+
 // --------------------
 // 3. Seed Function
 // --------------------
@@ -1076,6 +1319,7 @@ async function seedUsers() {
     await Service.deleteMany();
     await PriceList.deleteMany();
     await Review.deleteMany();
+    await JobPost.deleteMany();
 
     console.log("Old data removed");
 
@@ -1104,6 +1348,9 @@ async function seedUsers() {
     // Seed reviews (after providers and customers are created)
     const reviews = await seedReviews(createdProviders, createdCustomers);
 
+    // Seed job posts (after services and customers are created)
+    const jobPosts = await seedJobPosts(createdCustomers, services);
+
     // Summary
     console.log("=".repeat(50));
     console.log("Seeding Summary:");
@@ -1113,6 +1360,7 @@ async function seedUsers() {
     console.log(`Services: ${services.length}`);
     console.log(`Price Lists: ${priceLists.length}`);
     console.log(`Reviews: ${reviews.length}`);
+    console.log(`Job Posts: ${jobPosts.length}`);
     console.log("=".repeat(50));
     console.log("Seed successfully completed");
     console.log("");
