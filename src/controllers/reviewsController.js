@@ -1,40 +1,92 @@
 import Review from "../models/Review.js";
 import Customer from "../models/Customer.js";
 import Provider from "../models/Provider.js";
+import Service from "../models/Service.js";
+import { queryHelper } from "../utils/queryHelper.js";
 
 // GET /api/reviews - Get all reviews
-// GET /api/reviews - Get all reviews
+// Supports search, filter, sort, and pagination
+// Filters: provider_id, customer_id, rating, service_id (via provider skills)
 export const getAllReviews = async (req, res, next) => {
   try {
-    const { page = 1, limit = 5, provider_id, customer_id, rating } = req.query;
+    const { service_id, service_name } = req.query;
+    let defaultFilters = {};
 
-    // Build query
-    const query = {};
-    if (provider_id) query.provider_id = provider_id;
-    if (customer_id) query.customer_id = customer_id;
-    if (rating !== undefined) query.rating = Number(rating); // Added rating filter
+    // If filtering by service, find providers offering that service
+    if (service_id || service_name) {
+      let service = null;
+      if (service_id) {
+        service = await Service.findById(service_id);
+      } else if (service_name) {
+        service = await Service.findOne({
+          name: { $regex: new RegExp(service_name, "i") },
+        });
+      }
 
-    const reviews = await Review.find(query)
-      .populate("customer_id", "name email")
-      .populate("provider_id", "name skills")
-      .skip((page - 1) * limit)
-      .limit(limit)
-      .sort({ review_date: -1 });
+      if (service) {
+        // Find providers with this service in their skills
+        const skillRegex = new RegExp(service.name, "i");
+        const providers = await Provider.find({
+          skills: skillRegex, // Match any skill in the array
+          isApproved: true,
+        }).select("_id");
 
-    const total = await Review.countDocuments(query);
+        const providerIds = providers.map((p) => p._id);
+        if (providerIds.length > 0) {
+          defaultFilters.provider_id = { $in: providerIds };
+        } else {
+          // No providers found for this service, return empty result
+          defaultFilters.provider_id = { $in: [] };
+        }
+      }
+    }
+
+    // Remove service filters from query params before passing to queryHelper
+    const queryParams = { ...req.query };
+    delete queryParams.service_id;
+    delete queryParams.service_name;
+
+    const { data, pagination } = await queryHelper(
+      Review,
+      queryParams,
+      ["comment"], // Search fields
+      {
+        defaultFilters,
+        populate: [
+          { path: "customer_id", select: "name email" },
+          { path: "provider_id", select: "name skills" },
+        ],
+      }
+    );
+
+    // For public routes, anonymize provider data
+    const isPublic = !req.user || req.user.role !== "customer";
+    const reviews = isPublic
+      ? data.map((review) => {
+          const reviewObj = review.toObject();
+          // Remove sensitive provider data for public view
+          if (reviewObj.provider_id) {
+            reviewObj.provider_id = {
+              _id: reviewObj.provider_id._id,
+              name: reviewObj.provider_id.name,
+              skills: reviewObj.provider_id.skills,
+            };
+          }
+          // Remove customer email for public view
+          if (reviewObj.customer_id) {
+            reviewObj.customer_id = {
+              _id: reviewObj.customer_id._id,
+              name: reviewObj.customer_id.name,
+            };
+          }
+          return reviewObj;
+        })
+      : data;
 
     return res.status(200).json({
       success: true,
-      statusCode: 200,
-      data: {
-        reviews,
-        pagination: {
-          page,
-          limit,
-          total,
-          pages: Math.ceil(total / limit),
-        },
-      },
+      data: reviews,
+      pagination,
     });
   } catch (error) {
     next(error);

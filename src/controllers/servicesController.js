@@ -1,50 +1,32 @@
 import Service from "../models/Service.js";
 import Provider from "../models/Provider.js";
+import Review from "../models/Review.js";
+import PriceList from "../models/PriceList.js";
+import { queryHelper } from "../utils/queryHelper.js";
 
 // GET /api/services - Get all services (public route)
+// Supports search, filter, sort, and pagination
 export const getAllServices = async (req, res, next) => {
   try {
-    const { page = 1, limit = 5, q = "", category, isActive } = req.query;
-
-    const query = {};
-    if (category) {
-      query.category = category;
-    }
-    if (isActive !== undefined) {
-      query.isActive = isActive === "true";
-    } else {
-      query.isActive = true; // Default to active services
+    // Set default filter for active services if not specified
+    const defaultFilters = {};
+    if (req.query.isActive === undefined) {
+      defaultFilters.isActive = true;
     }
 
-    // Filter for search
-    const searchFilter = {
-      $or: [
-        { name: { $regex: q, $options: "i" } },
-        { category: { $regex: q, $options: "i" } },
-      ],
-    };
-
-    const finalFilter = { ...query, ...searchFilter };
-
-    const services = await Service.find(finalFilter)
-      .skip((page - 1) * limit)
-      .limit(limit)
-      .sort({ category: 1, name: 1 });
-
-    const total = await Service.countDocuments(finalFilter);
+    const { data, pagination } = await queryHelper(
+      Service,
+      req.query,
+      ["name", "description", "category"], // Search fields
+      {
+        defaultFilters,
+      }
+    );
 
     return res.status(200).json({
       success: true,
-      statusCode: 200,
-      data: {
-        services,
-        pagination: {
-          page,
-          limit,
-          total,
-          pages: Math.ceil(total / limit),
-        },
-      },
+      data,
+      pagination,
     });
   } catch (error) {
     next(error);
@@ -70,39 +52,27 @@ export const getAllCategories = async (req, res, next) => {
 };
 
 // GET /api/services/category/:category - Get services by category (public route)
+// Supports search, filter, sort, and pagination
 export const getServicesByCategory = async (req, res, next) => {
   try {
     const { category } = req.params;
-    const { page = 1, limit = 5, q = "" } = req.query;
 
-    const matchFilter = {
-      category,
-      isActive: true,
-      $or: [
-        { name: { $regex: q, $options: "i" } },
-        { category: { $regex: q, $options: "i" } },
-      ],
-    };
-
-    const services = await Service.find(matchFilter)
-      .skip((page - 1) * limit)
-      .limit(limit)
-      .sort({ name: 1 });
-
-    const total = await Service.countDocuments(matchFilter);
+    const { data, pagination } = await queryHelper(
+      Service,
+      { ...req.query, category }, // Include category in query params
+      ["name", "description"], // Search fields
+      {
+        defaultFilters: { isActive: true },
+      }
+    );
 
     return res.status(200).json({
       success: true,
       statusCode: 200,
       data: {
         category,
-        services,
-        pagination: {
-          page,
-          limit,
-          total,
-          pages: Math.ceil(total / limit),
-        },
+        services: data,
+        pagination,
       },
     });
   } catch (error) {
@@ -111,6 +81,7 @@ export const getServicesByCategory = async (req, res, next) => {
 };
 
 // GET /api/services/:id - Get service by ID (public route)
+// Includes related reviews (anonymized) and price list
 export const getServiceById = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -125,11 +96,72 @@ export const getServiceById = async (req, res, next) => {
       });
     }
 
+    // Get providers offering this service (for finding related reviews)
+    const skillRegex = new RegExp(service.name, "i");
+    const providers = await Provider.find({
+      skills: skillRegex, // Match any skill in the array
+      isApproved: true,
+    }).select("_id");
+
+    const providerIds = providers.map((p) => p._id);
+
+    // Get reviews for providers offering this service (anonymized for public)
+    const reviews = await Review.find({
+      provider_id: { $in: providerIds },
+    })
+      .populate("customer_id", "name") // Only name, no email or personal data
+      .populate("provider_id", "name skills") // Only name and skills, no personal data
+      .select("-customer_id.email -provider_id.email -provider_id.phone -provider_id.address")
+      .sort({ review_date: -1 })
+      .limit(10); // Limit to recent 10 reviews
+
+    // Calculate average rating for this service
+    const avgRatingResult = await Review.aggregate([
+      { $match: { provider_id: { $in: providerIds } } },
+      { $group: { _id: null, avgRating: { $avg: "$rating" }, count: { $sum: 1 } } },
+    ]);
+
+    const avgRating = avgRatingResult.length > 0 ? avgRatingResult[0].avgRating : 0;
+    const reviewCount = avgRatingResult.length > 0 ? avgRatingResult[0].count : 0;
+
+    // Get price list for this service
+    const priceLists = await PriceList.find({
+      service_id: id,
+      isActive: true,
+    }).sort({ createdAt: -1 });
+
+    // Anonymize reviews for public view (remove sensitive provider data)
+    const anonymizedReviews = reviews.map((review) => {
+      const reviewObj = review.toObject();
+      // Keep only provider name and skills, remove other personal info
+      if (reviewObj.provider_id) {
+        reviewObj.provider_id = {
+          _id: reviewObj.provider_id._id,
+          name: reviewObj.provider_id.name,
+          skills: reviewObj.provider_id.skills,
+        };
+      }
+      // Keep only customer name, remove email
+      if (reviewObj.customer_id) {
+        reviewObj.customer_id = {
+          _id: reviewObj.customer_id._id,
+          name: reviewObj.customer_id.name,
+        };
+      }
+      return reviewObj;
+    });
+
     return res.status(200).json({
       success: true,
       statusCode: 200,
       data: {
         service,
+        reviews: anonymizedReviews,
+        reviewStats: {
+          averageRating: Math.round(avgRating * 10) / 10, // Round to 1 decimal
+          totalReviews: reviewCount,
+        },
+        priceLists,
       },
     });
   } catch (error) {
@@ -138,18 +170,11 @@ export const getServiceById = async (req, res, next) => {
 };
 
 // GET /api/services/:id/providers - Get providers offering a service (public route)
+// Supports search, filter, sort, and pagination
+// For logged-in customers, includes full provider reviews
 export const getProvidersByService = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { page = 1, limit = 5, q = "" } = req.query;
-
-    const filter = {
-      isActive: true,
-      $or: [
-        { name: { $regex: q, $options: "i" } },
-        { email: { $regex: q, $options: "i" } },
-      ],
-    };
 
     // Get service details
     const service = await Service.findById(id);
@@ -161,29 +186,62 @@ export const getProvidersByService = async (req, res, next) => {
       });
     }
 
-    // Find providers who have this service in their skills
-    const providers = await Provider.find(filter, {
-      skills: { $in: [new RegExp(service.name, "i")] },
-    })
-      .select("-password")
-      .skip((page - 1) * limit)
-      .limit(limit)
-      .sort({ rating: -1, createdAt: -1 });
+    // Build query to find providers with matching skills
+    // Match providers whose skills array contains the service name (case-insensitive)
+    const skillRegex = new RegExp(service.name, "i");
+    
+    // Use queryHelper with custom filter for skills matching
+    const queryParams = { ...req.query };
+    const defaultFilters = {
+      isApproved: true, // Only show approved providers
+      skills: skillRegex, // Match any skill in the array that matches the service name
+    };
 
-    const total = await Provider.countDocuments(filter, {
-      skills: { $in: [new RegExp(service.name, "i")] },
-    });
+    const { data: providers, pagination } = await queryHelper(
+      Provider,
+      queryParams,
+      ["name", "email", "address"], // Search fields
+      {
+        defaultFilters,
+        select: "-password", // Exclude password
+      }
+    );
+
+    // For logged-in customers, include provider reviews
+    let providersWithReviews = providers;
+    if (req.user && req.user.role === "customer") {
+      providersWithReviews = await Promise.all(
+        providers.map(async (provider) => {
+          const reviews = await Review.find({ provider_id: provider._id })
+            .populate("customer_id", "name")
+            .populate("provider_id", "name skills")
+            .sort({ review_date: -1 })
+            .limit(5);
+
+          const avgRatingResult = await Review.aggregate([
+            { $match: { provider_id: provider._id } },
+            { $group: { _id: null, avgRating: { $avg: "$rating" }, count: { $sum: 1 } } },
+          ]);
+
+          const avgRating = avgRatingResult.length > 0 ? avgRatingResult[0].avgRating : 0;
+          const reviewCount = avgRatingResult.length > 0 ? avgRatingResult[0].count : 0;
+
+          return {
+            ...provider.toObject(),
+            reviews,
+            reviewStats: {
+              averageRating: Math.round(avgRating * 10) / 10,
+              totalReviews: reviewCount,
+            },
+          };
+        })
+      );
+    }
 
     return res.status(200).json({
       success: true,
       statusCode: 200,
       data: {
-        pagination: {
-          page,
-          limit,
-          total,
-          pages: Math.ceil(total / limit),
-        },
         service: {
           _id: service._id,
           name: service.name,
@@ -191,7 +249,8 @@ export const getProvidersByService = async (req, res, next) => {
           category: service.category,
           base_price: service.base_price,
         },
-        providers,
+        providers: providersWithReviews,
+        pagination,
       },
     });
   } catch (error) {

@@ -10,6 +10,7 @@ import providersRouter from "./src/routes/providersRoutes.js";
 import subscriptionsRouter from "./src/routes/subscriptionsRoutes.js";
 import reviewsRouter from "./src/routes/reviewsRoutes.js";
 import servicesRouter from "./src/routes/servicesRoutes.js";
+import priceListRouter from "./src/routes/priceListRoutes.js";
 import usersRouter from "./src/routes/authRoutes.js";
 
 // Initialize express
@@ -37,6 +38,7 @@ app.use("/api/providers", providersRouter);
 app.use("/api/subscriptions", subscriptionsRouter);
 app.use("/api/reviews", reviewsRouter);
 app.use("/api/services", servicesRouter);
+app.use("/api/price-list", priceListRouter);
 
 // Page not found
 app.use(notFound);
