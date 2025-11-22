@@ -32,20 +32,28 @@ const jobPostSchema = new mongoose.Schema(
       trim: true,
       // Optional field
     },
-    posted_by: {
+    customerId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: Customer,
       required: [true, "Customer ID is required"],
+      index: true,
     },
-    status: {
-      type: String,
-      enum: ["Pending", "Approved", "Rejected"],
-      default: "Pending",
-    },
-    applied_providers: [
+    applications: [
       {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: Provider,
+        providerId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: Provider,
+          required: true,
+        },
+        status: {
+          type: String,
+          enum: ["applied", "approved", "rejected"],
+          default: "applied",
+        },
+        appliedAt: {
+          type: Date,
+          default: Date.now,
+        },
       },
     ],
   },
@@ -55,8 +63,8 @@ const jobPostSchema = new mongoose.Schema(
 );
 
 // Indexes for efficient queries
-jobPostSchema.index({ service_id: 1, status: 1 });
-jobPostSchema.index({ posted_by: 1 });
-jobPostSchema.index({ status: 1 });
+jobPostSchema.index({ service_id: 1 });
+jobPostSchema.index({ customerId: 1 });
+jobPostSchema.index({ "applications.providerId": 1 });
 
 export default mongoose.model("JobPost", jobPostSchema);

@@ -323,150 +323,200 @@ const customers = [
   {
     name: "Tharindu Weerasinghe",
     email: "tharindu.customer1@example.com",
+    phone: "0761111111",
+    address: "Colombo",
     role: "customer",
     isActive: true,
   },
   {
     name: "Sajini Perera",
     email: "sajini.customer2@example.com",
+    phone: "0762222222",
+    address: "Gampaha",
     role: "customer",
     isActive: true,
   },
   {
     name: "Dilshan Jayawardena",
     email: "dilshan.customer3@example.com",
+    phone: "0763333333",
+    address: "Kandy",
     role: "customer",
     isActive: true,
   },
   {
     name: "Nadeesha Fernando",
     email: "nadeesha.customer4@example.com",
+    phone: "0764444444",
+    address: "Negombo",
     role: "customer",
     isActive: true,
   },
   {
     name: "Ishara Madushani",
     email: "ishara.customer5@example.com",
+    phone: "0765555555",
+    address: "Matara",
     role: "customer",
     isActive: true,
   },
   {
     name: "Ravindu Silva",
     email: "ravindu.customer6@example.com",
+    phone: "0766666666",
+    address: "Kurunegala",
     role: "customer",
     isActive: true,
   },
   {
     name: "Gayani Dias",
     email: "gayani.customer7@example.com",
+    phone: "0767777777",
+    address: "Ratnapura",
     role: "customer",
     isActive: true,
   },
   {
     name: "Kaveesha Ratnayake",
     email: "kaveesha.customer8@example.com",
+    phone: "0768888888",
+    address: "Jaffna",
     role: "customer",
     isActive: true,
   },
   {
     name: "Sathsara Gunasekara",
     email: "sathsara.customer9@example.com",
+    phone: "0769999999",
+    address: "Anuradhapura",
     role: "customer",
     isActive: true,
   },
   {
     name: "Harshi Aluwihare",
     email: "harshi.customer10@example.com",
+    phone: "0711111111",
+    address: "Kegalle",
     role: "customer",
     isActive: true,
   },
   {
     name: "Sanjula Karunaratne",
     email: "sanjula.customer11@example.com",
+    phone: "0712222222",
+    address: "Colombo",
     role: "customer",
     isActive: true,
   },
   {
     name: "Nimashi Ranathunga",
     email: "nimashi.customer12@example.com",
+    phone: "0713333333",
+    address: "Galle",
     role: "customer",
     isActive: true,
   },
   {
     name: "Kalpa Abeysekara",
     email: "kalpa.customer13@example.com",
+    phone: "0714444444",
+    address: "Matale",
     role: "customer",
     isActive: true,
   },
   {
     name: "Vindya Udayanga",
     email: "vindya.customer14@example.com",
+    phone: "0715555555",
+    address: "Trincomalee",
     role: "customer",
     isActive: true,
   },
   {
     name: "Malith Peris",
     email: "malith.customer15@example.com",
+    phone: "0716666666",
+    address: "Badulla",
     role: "customer",
     isActive: true,
   },
   {
     name: "Yasas Muthumala",
     email: "yasas.customer16@example.com",
+    phone: "0717777777",
+    address: "Kurunegala",
     role: "customer",
     isActive: true,
   },
   {
     name: "Chathuni Ekanayake",
     email: "chathuni.customer17@example.com",
+    phone: "0718888888",
+    address: "Hambantota",
     role: "customer",
     isActive: true,
   },
   {
     name: "Sachintha Prabath",
     email: "sachintha.customer18@example.com",
+    phone: "0719999999",
+    address: "Nuwara Eliya",
     role: "customer",
     isActive: true,
   },
   {
     name: "Nirasha Herath",
     email: "nirasha.customer19@example.com",
+    phone: "0751111111",
+    address: "Kandy",
     role: "customer",
     isActive: true,
   },
   {
     name: "Ayesh Fonseka",
     email: "ayesh.customer20@example.com",
+    phone: "0752222222",
+    address: "Colombo",
     role: "customer",
     isActive: true,
   },
   {
     name: "Thilini Samarasekara",
     email: "thilini.customer21@example.com",
+    phone: "0753333333",
+    address: "Gampaha",
     role: "customer",
     isActive: true,
   },
   {
     name: "Chamod Lakshan",
     email: "chamod.customer22@example.com",
+    phone: "0754444444",
+    address: "Colombo",
     role: "customer",
     isActive: true,
   },
   {
     name: "Pavani Senanayake",
     email: "pavani.customer23@example.com",
+    phone: "0755555555",
+    address: "Kegalle",
     role: "customer",
     isActive: true,
   },
   {
     name: "Ramesh Priyadarshana",
     email: "ramesh.customer24@example.com",
+    phone: "0756666666",
+    address: "Anuradhapura",
     role: "customer",
     isActive: true,
   },
   {
     name: "Imesha Wijeratne",
     email: "imesha.customer25@example.com",
+    phone: "0757777777",
+    address: "Kurunegala",
     role: "customer",
     isActive: true,
   },
@@ -1238,10 +1288,7 @@ const seedJobPosts = async (customers, services) => {
       },
     ];
 
-    // Create job posts with mix of statuses
-    const statuses = ["Pending", "Approved", "Rejected"];
-    const statusWeights = [0.4, 0.5, 0.1]; // 40% pending, 50% approved, 10% rejected
-
+    // Create job posts (no status - all are immediately active)
     for (const template of jobTemplates) {
       // Find matching service
       const service = services.find(
@@ -1253,49 +1300,58 @@ const seedJobPosts = async (customers, services) => {
       // Select random customer
       const customer = getRandom(customers);
 
-      // Select status based on weights
-      const random = Math.random();
-      let status = "Pending";
-      if (random < statusWeights[0]) {
-        status = "Pending";
-      } else if (random < statusWeights[0] + statusWeights[1]) {
-        status = "Approved";
-      } else {
-        status = "Rejected";
-      }
-
       jobPosts.push({
         title: template.title,
         description: template.description,
         duration: template.duration,
         service_id: service._id,
         location: template.location,
-        posted_by: customer._id,
-        status: status,
-        applied_providers: [], // Start with no applications
+        customerId: customer._id,
+        applications: [], // Start with no applications
       });
     }
 
     const createdJobPosts = await JobPost.insertMany(jobPosts);
     console.log(`${createdJobPosts.length} job posts created`);
 
-    // Add some provider applications to approved job posts
-    const approvedJobPosts = createdJobPosts.filter(
-      (jp) => jp.status === "Approved"
-    );
+    // Add some provider applications to job posts
     const allProviders = await Provider.find({ isApproved: true }).select(
       "_id"
     );
 
-    // Add random applications to some approved jobs
-    for (let i = 0; i < Math.min(10, approvedJobPosts.length); i++) {
-      const jobPost = approvedJobPosts[i];
+    // Add random applications to some jobs (mix of applied, approved, rejected)
+    const applicationStatuses = ["applied", "approved", "rejected"];
+    const statusWeights = [0.5, 0.3, 0.2]; // 50% applied, 30% approved, 20% rejected
+
+    for (let i = 0; i < Math.min(15, createdJobPosts.length); i++) {
+      const jobPost = createdJobPosts[i];
       const numApplications = Math.floor(Math.random() * 3) + 1; // 1-3 applications
 
       for (let j = 0; j < numApplications; j++) {
         const provider = getRandom(allProviders);
-        if (!jobPost.applied_providers.includes(provider._id)) {
-          jobPost.applied_providers.push(provider._id);
+        
+        // Check if provider already applied
+        const alreadyApplied = jobPost.applications.some(
+          (app) => app.providerId.toString() === provider._id.toString()
+        );
+        
+        if (!alreadyApplied) {
+          // Select status based on weights
+          const random = Math.random();
+          let status = "applied";
+          if (random < statusWeights[0]) {
+            status = "applied";
+          } else if (random < statusWeights[0] + statusWeights[1]) {
+            status = "approved";
+          } else {
+            status = "rejected";
+          }
+
+          jobPost.applications.push({
+            providerId: provider._id,
+            status: status,
+            appliedAt: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000), // Random date within last 7 days
+          });
         }
       }
       await jobPost.save();

@@ -4,7 +4,6 @@ import cors from "cors";
 import { defaultError, notFound } from "./src/middleware/ErrorHandlers.js";
 
 // Import route groups
-import adminsRouter from "./src/routes/adminsRoutes.js";
 import customersRouter from "./src/routes/customersRoutes.js";
 import providersRouter from "./src/routes/providersRoutes.js";
 import subscriptionsRouter from "./src/routes/subscriptionsRoutes.js";
@@ -32,7 +31,6 @@ connectDB();
 
 // API Routes
 app.use("/api/users", usersRouter);
-app.use("/api/admins", adminsRouter);
 app.use("/api/customers", customersRouter);
 app.use("/api/providers", providersRouter);
 app.use("/api/subscriptions", subscriptionsRouter);

@@ -14,6 +14,16 @@ const customerSchema = new mongoose.Schema(
       unique: true,
       lowercase: true,
     },
+    phone: {
+      type: String,
+      required: [true, "Phone number is required"],
+      trim: true,
+    },
+    address: {
+      type: String,
+      trim: true,
+      // Optional field
+    },
     password: {
       type: String,
       required: [true, "Password is required"],

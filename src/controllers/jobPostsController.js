@@ -6,7 +6,7 @@ import { queryHelper } from "../utils/queryHelper.js";
 
 /**
  * GET /api/job-posts - Get all job posts
- * - Providers: See all approved job posts (no skill filtering)
+ * - Providers: See all job posts (immediately active, no approval needed)
  * - Customers: See their own posts
  * - Admin: See all posts
  * - Public: Cannot access (handled by route middleware)
@@ -16,14 +16,11 @@ export const getAllJobPosts = async (req, res, next) => {
     let defaultFilters = {};
 
     // Role-based filtering
-    if (req.user.role === "provider") {
-      // Providers can see all approved job posts
-      defaultFilters.status = "Approved";
-    } else if (req.user.role === "customer") {
+    if (req.user.role === "customer") {
       // Customers can only see their own posts
-      defaultFilters.posted_by = req.user.id;
+      defaultFilters.customerId = req.user.id;
     }
-    // Admin sees all (no default filter)
+    // Providers and Admin see all (no default filter)
 
     const { data, pagination } = await queryHelper(
       JobPost,
@@ -33,8 +30,8 @@ export const getAllJobPosts = async (req, res, next) => {
         defaultFilters,
         populate: [
           { path: "service_id", select: "name category description" },
-          { path: "posted_by", select: "name email" },
-          { path: "applied_providers", select: "name email skills" },
+          { path: "customerId", select: "name email phone" },
+          { path: "applications.providerId", select: "name email skills phone" },
         ],
       }
     );
@@ -58,8 +55,8 @@ export const getJobPostById = async (req, res, next) => {
 
     const jobPost = await JobPost.findById(id)
       .populate("service_id", "name category description")
-      .populate("posted_by", "name email")
-      .populate("applied_providers", "name email skills phone");
+      .populate("customerId", "name email phone address")
+      .populate("applications.providerId", "name email skills phone");
 
     if (!jobPost) {
       return res.status(404).json({
@@ -70,35 +67,17 @@ export const getJobPostById = async (req, res, next) => {
     }
 
     // Access control
-    if (!req.user) {
-      return res.status(401).json({
-        success: false,
-        statusCode: 401,
-        message: "Authentication required",
-      });
-    }
-
-    if (req.user.role === "admin") {
-      // Admin can see all
-    } else if (req.user.role === "customer") {
+    if (req.user.role === "customer") {
       // Customer can only see their own posts
-      if (jobPost.posted_by._id.toString() !== req.user.id) {
+      if (jobPost.customerId._id.toString() !== req.user.id) {
         return res.status(403).json({
           success: false,
           statusCode: 403,
           message: "You can only view your own job posts",
         });
       }
-    } else if (req.user.role === "provider") {
-      // Provider can only see approved posts
-      if (jobPost.status !== "Approved") {
-        return res.status(403).json({
-          success: false,
-          statusCode: 403,
-          message: "This job post is not approved yet",
-        });
-      }
     }
+    // Providers and Admin can see all job posts
 
     return res.status(200).json({
       success: true,
@@ -114,6 +93,7 @@ export const getJobPostById = async (req, res, next) => {
 
 /**
  * POST /api/job-posts - Create job post (customer only)
+ * Job posts are immediately active - no admin approval needed
  */
 export const createJobPost = async (req, res, next) => {
   try {
@@ -166,6 +146,27 @@ export const createJobPost = async (req, res, next) => {
       });
     }
 
+    // Verify customer exists and has phone number
+    const customer = await Customer.findById(req.user.id);
+    if (!customer) {
+      return res.status(404).json({
+        success: false,
+        statusCode: 404,
+        message: "Customer not found",
+      });
+    }
+
+    if (!customer.phone) {
+      return res.status(400).json({
+        success: false,
+        statusCode: 400,
+        message: "Phone number is required to post jobs. Please update your profile.",
+        errors: [
+          { field: "phone", message: "Phone number is required" },
+        ],
+      });
+    }
+
     // Verify service exists
     const service = await Service.findById(service_id);
     if (!service) {
@@ -176,36 +177,26 @@ export const createJobPost = async (req, res, next) => {
       });
     }
 
-    // Verify customer exists
-    const customer = await Customer.findById(req.user.id);
-    if (!customer) {
-      return res.status(404).json({
-        success: false,
-        statusCode: 404,
-        message: "Customer not found",
-      });
-    }
-
     const jobPost = new JobPost({
       title,
       description,
       duration,
       service_id,
       location,
-      posted_by: req.user.id,
-      status: "Pending", // Always starts as pending
+      customerId: req.user.id,
+      applications: [], // Initialize empty applications array
     });
 
     await jobPost.save();
 
     const populatedJobPost = await JobPost.findById(jobPost._id)
       .populate("service_id", "name category description")
-      .populate("posted_by", "name email");
+      .populate("customerId", "name email phone");
 
     return res.status(201).json({
       success: true,
       statusCode: 201,
-      message: "Job post created successfully. Waiting for admin approval.",
+      message: "Job post created successfully. It is now visible to providers.",
       data: {
         jobPost: populatedJobPost,
       },
@@ -217,7 +208,7 @@ export const createJobPost = async (req, res, next) => {
 
 /**
  * PUT /api/job-posts/:id - Update job post
- * - Customer can update their own pending posts
+ * - Customer can update their own posts
  * - Admin can update any post
  */
 export const updateJobPost = async (req, res, next) => {
@@ -245,20 +236,12 @@ export const updateJobPost = async (req, res, next) => {
         });
       }
 
-      // Customer can only update their own pending posts
-      if (jobPost.posted_by.toString() !== req.user.id) {
+      // Customer can only update their own posts
+      if (jobPost.customerId.toString() !== req.user.id) {
         return res.status(403).json({
           success: false,
           statusCode: 403,
           message: "You can only update your own job posts",
-        });
-      }
-
-      if (jobPost.status !== "Pending") {
-        return res.status(403).json({
-          success: false,
-          statusCode: 403,
-          message: "You can only update pending job posts",
         });
       }
     }
@@ -286,104 +269,13 @@ export const updateJobPost = async (req, res, next) => {
 
     const populatedJobPost = await JobPost.findById(jobPost._id)
       .populate("service_id", "name category description")
-      .populate("posted_by", "name email")
-      .populate("applied_providers", "name email skills");
+      .populate("customerId", "name email phone")
+      .populate("applications.providerId", "name email skills");
 
     return res.status(200).json({
       success: true,
       statusCode: 200,
       message: "Job post updated successfully",
-      data: {
-        jobPost: populatedJobPost,
-      },
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-/**
- * PUT /api/job-posts/:id/approve - Approve job post (admin only)
- */
-export const approveJobPost = async (req, res, next) => {
-  try {
-    const { id } = req.params;
-
-    const jobPost = await JobPost.findById(id);
-
-    if (!jobPost) {
-      return res.status(404).json({
-        success: false,
-        statusCode: 404,
-        message: "Job post not found",
-      });
-    }
-
-    if (jobPost.status === "Approved") {
-      return res.status(400).json({
-        success: false,
-        statusCode: 400,
-        message: "Job post is already approved",
-      });
-    }
-
-    jobPost.status = "Approved";
-    await jobPost.save();
-
-    const populatedJobPost = await JobPost.findById(jobPost._id)
-      .populate("service_id", "name category description")
-      .populate("posted_by", "name email");
-
-    return res.status(200).json({
-      success: true,
-      statusCode: 200,
-      message:
-        "Job post approved successfully. Providers can now view this job.",
-      data: {
-        jobPost: populatedJobPost,
-      },
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-/**
- * PUT /api/job-posts/:id/reject - Reject job post (admin only)
- */
-export const rejectJobPost = async (req, res, next) => {
-  try {
-    const { id } = req.params;
-
-    const jobPost = await JobPost.findById(id);
-
-    if (!jobPost) {
-      return res.status(404).json({
-        success: false,
-        statusCode: 404,
-        message: "Job post not found",
-      });
-    }
-
-    if (jobPost.status === "Rejected") {
-      return res.status(400).json({
-        success: false,
-        statusCode: 400,
-        message: "Job post is already rejected",
-      });
-    }
-
-    jobPost.status = "Rejected";
-    await jobPost.save();
-
-    const populatedJobPost = await JobPost.findById(jobPost._id)
-      .populate("service_id", "name category description")
-      .populate("posted_by", "name email");
-
-    return res.status(200).json({
-      success: true,
-      statusCode: 200,
-      message: "Job post rejected successfully",
       data: {
         jobPost: populatedJobPost,
       },
@@ -418,16 +310,12 @@ export const applyToJobPost = async (req, res, next) => {
       });
     }
 
-    if (jobPost.status !== "Approved") {
-      return res.status(400).json({
-        success: false,
-        statusCode: 400,
-        message: "You can only apply to approved job posts",
-      });
-    }
-
     // Check if provider already applied
-    if (jobPost.applied_providers.includes(req.user.id)) {
+    const existingApplication = jobPost.applications.find(
+      (app) => app.providerId.toString() === req.user.id
+    );
+
+    if (existingApplication) {
       return res.status(400).json({
         success: false,
         statusCode: 400,
@@ -435,19 +323,24 @@ export const applyToJobPost = async (req, res, next) => {
       });
     }
 
-    // Add provider to applied list
-    jobPost.applied_providers.push(req.user.id);
+    // Add new application
+    jobPost.applications.push({
+      providerId: req.user.id,
+      status: "applied",
+      appliedAt: new Date(),
+    });
+
     await jobPost.save();
 
     const populatedJobPost = await JobPost.findById(jobPost._id)
       .populate("service_id", "name category description")
-      .populate("posted_by", "name email")
-      .populate("applied_providers", "name email skills phone");
+      .populate("customerId", "name email phone")
+      .populate("applications.providerId", "name email skills phone");
 
     return res.status(200).json({
       success: true,
       statusCode: 200,
-      message: "Successfully applied to job post",
+      message: "Successfully applied to job post. Waiting for customer approval.",
       data: {
         jobPost: populatedJobPost,
       },
@@ -458,13 +351,21 @@ export const applyToJobPost = async (req, res, next) => {
 };
 
 /**
- * DELETE /api/job-posts/:id - Delete job post (admin only)
+ * PUT /api/job-posts/:id/applications/:applicationId/approve - Approve provider application (customer only)
  */
-export const deleteJobPost = async (req, res, next) => {
+export const approveApplication = async (req, res, next) => {
   try {
-    const { id } = req.params;
+    const { id, applicationId } = req.params;
 
-    const jobPost = await JobPost.findByIdAndDelete(id);
+    if (!req.user || req.user.role !== "customer") {
+      return res.status(403).json({
+        success: false,
+        statusCode: 403,
+        message: "Only customers can approve applications",
+      });
+    }
+
+    const jobPost = await JobPost.findById(id);
 
     if (!jobPost) {
       return res.status(404).json({
@@ -473,6 +374,170 @@ export const deleteJobPost = async (req, res, next) => {
         message: "Job post not found",
       });
     }
+
+    // Verify customer owns this job post
+    if (jobPost.customerId.toString() !== req.user.id) {
+      return res.status(403).json({
+        success: false,
+        statusCode: 403,
+        message: "You can only approve applications for your own job posts",
+      });
+    }
+
+    // Find the application
+    const application = jobPost.applications.id(applicationId);
+    if (!application) {
+      return res.status(404).json({
+        success: false,
+        statusCode: 404,
+        message: "Application not found",
+      });
+    }
+
+    if (application.status === "approved") {
+      return res.status(400).json({
+        success: false,
+        statusCode: 400,
+        message: "Application is already approved",
+      });
+    }
+
+    // Update application status
+    application.status = "approved";
+    await jobPost.save();
+
+    const populatedJobPost = await JobPost.findById(jobPost._id)
+      .populate("service_id", "name category description")
+      .populate("customerId", "name email phone")
+      .populate("applications.providerId", "name email skills phone");
+
+    return res.status(200).json({
+      success: true,
+      statusCode: 200,
+      message: "Application approved successfully",
+      data: {
+        jobPost: populatedJobPost,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * PUT /api/job-posts/:id/applications/:applicationId/reject - Reject provider application (customer only)
+ */
+export const rejectApplication = async (req, res, next) => {
+  try {
+    const { id, applicationId } = req.params;
+
+    if (!req.user || req.user.role !== "customer") {
+      return res.status(403).json({
+        success: false,
+        statusCode: 403,
+        message: "Only customers can reject applications",
+      });
+    }
+
+    const jobPost = await JobPost.findById(id);
+
+    if (!jobPost) {
+      return res.status(404).json({
+        success: false,
+        statusCode: 404,
+        message: "Job post not found",
+      });
+    }
+
+    // Verify customer owns this job post
+    if (jobPost.customerId.toString() !== req.user.id) {
+      return res.status(403).json({
+        success: false,
+        statusCode: 403,
+        message: "You can only reject applications for your own job posts",
+      });
+    }
+
+    // Find the application
+    const application = jobPost.applications.id(applicationId);
+    if (!application) {
+      return res.status(404).json({
+        success: false,
+        statusCode: 404,
+        message: "Application not found",
+      });
+    }
+
+    if (application.status === "rejected") {
+      return res.status(400).json({
+        success: false,
+        statusCode: 400,
+        message: "Application is already rejected",
+      });
+    }
+
+    // Update application status
+    application.status = "rejected";
+    await jobPost.save();
+
+    const populatedJobPost = await JobPost.findById(jobPost._id)
+      .populate("service_id", "name category description")
+      .populate("customerId", "name email phone")
+      .populate("applications.providerId", "name email skills phone");
+
+    return res.status(200).json({
+      success: true,
+      statusCode: 200,
+      message: "Application rejected successfully",
+      data: {
+        jobPost: populatedJobPost,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * DELETE /api/job-posts/:id - Delete job post
+ * - Customer can delete their own posts
+ * - Admin can delete any post
+ */
+export const deleteJobPost = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    const jobPost = await JobPost.findById(id);
+
+    if (!jobPost) {
+      return res.status(404).json({
+        success: false,
+        statusCode: 404,
+        message: "Job post not found",
+      });
+    }
+
+    // Access control
+    if (req.user.role !== "admin") {
+      if (req.user.role !== "customer") {
+        return res.status(403).json({
+          success: false,
+          statusCode: 403,
+          message: "Only customers and admins can delete job posts",
+        });
+      }
+
+      // Customer can only delete their own posts
+      if (jobPost.customerId.toString() !== req.user.id) {
+        return res.status(403).json({
+          success: false,
+          statusCode: 403,
+          message: "You can only delete your own job posts",
+        });
+      }
+    }
+
+    await JobPost.findByIdAndDelete(id);
 
     return res.status(200).json({
       success: true,

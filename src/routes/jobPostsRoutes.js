@@ -5,9 +5,9 @@ import {
   getJobPostById,
   createJobPost,
   updateJobPost,
-  approveJobPost,
-  rejectJobPost,
   applyToJobPost,
+  approveApplication,
+  rejectApplication,
   deleteJobPost,
 } from "../controllers/jobPostsController.js";
 
@@ -25,11 +25,19 @@ jobPostsRouter.post("/", verifyRole("customer"), createJobPost);
 jobPostsRouter.post("/:id/apply", verifyRole("provider"), applyToJobPost);
 
 // PUT routes
-jobPostsRouter.put("/:id", updateJobPost); // Customer (own pending) or Admin (any)
-jobPostsRouter.put("/:id/approve", verifyRole("admin"), approveJobPost);
-jobPostsRouter.put("/:id/reject", verifyRole("admin"), rejectJobPost);
+jobPostsRouter.put("/:id", updateJobPost); // Customer (own) or Admin (any)
+jobPostsRouter.put(
+  "/:id/applications/:applicationId/approve",
+  verifyRole("customer"),
+  approveApplication
+);
+jobPostsRouter.put(
+  "/:id/applications/:applicationId/reject",
+  verifyRole("customer"),
+  rejectApplication
+);
 
 // DELETE routes
-jobPostsRouter.delete("/:id", verifyRole("admin"), deleteJobPost);
+jobPostsRouter.delete("/:id", deleteJobPost); // Customer (own) or Admin (any)
 
 export default jobPostsRouter;
