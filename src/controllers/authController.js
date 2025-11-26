@@ -280,7 +280,7 @@ export const login = async (req, res, next) => {
     console.log("Verifying password...");
     const isPasswordValid = await user.comparePassword(password);
     console.log("Password valid:", isPasswordValid);
-    
+
     if (!isPasswordValid) {
       console.log("Password verification failed");
       return res.status(401).json({
@@ -310,13 +310,20 @@ export const login = async (req, res, next) => {
     const userData = user.toObject();
     delete userData.password;
 
+    // STORE TOKEN IN COOKIE
+    res.cookie("access_token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+    });
+
     return res.status(200).json({
       success: true,
       statusCode: 200,
       message: "Login successful",
       data: {
         user: userData,
-        token,
       },
     });
   } catch (error) {
