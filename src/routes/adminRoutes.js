@@ -10,8 +10,6 @@ import {
   getAllCustomers,
   getCustomerById,
   deleteCustomer,
-  getAllAdmins,
-  getAllSubscriptions,
   getAllReviews,
   deleteReview,
 } from "../controllers/adminsController.js";
@@ -26,8 +24,8 @@ adminRouter.use(verifyRole("admin"));
 adminRouter.get("/providers/pending", getPendingProviders);
 adminRouter.get("/providers/:id", getProviderById);
 adminRouter.get("/providers", getAllProviders);
-adminRouter.put("/providers/:id/approve", approveProvider);
-adminRouter.put("/providers/:id/reject", rejectProvider);
+adminRouter.patch("/providers/:id/approve", approveProvider);
+adminRouter.patch("/providers/:id/reject", rejectProvider);
 adminRouter.delete("/providers/:id", deleteProvider);
 
 // Customer management routes
@@ -35,11 +33,6 @@ adminRouter.get("/customers/:id", getCustomerById);
 adminRouter.get("/customers", getAllCustomers);
 adminRouter.delete("/customers/:id", deleteCustomer);
 
-// Admin management routes
-adminRouter.get("/admins", getAllAdmins);
-
-// Subscription management routes
-adminRouter.get("/subscriptions", getAllSubscriptions);
 
 // Review management routes
 adminRouter.get("/reviews", getAllReviews);
