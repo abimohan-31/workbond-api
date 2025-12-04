@@ -23,7 +23,7 @@ app.use(
   cors({
     origin: "http://localhost:3000", // Your frontend URL
     credentials: true, // Allow cookies/auth headers
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    methods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
   })
 );
 
@@ -60,7 +60,7 @@ app.use(defaultError);
 const startServer = async () => {
   try {
     await connectDB();
-    const PORT = process.env.PORT || 3000;
+    const PORT = process.env.PORT || 5000;
     app.listen(PORT, () => {
       console.log(`Server is running on http://localhost:${PORT}`);
     });
