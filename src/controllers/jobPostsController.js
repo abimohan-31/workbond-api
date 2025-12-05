@@ -547,3 +547,73 @@ export const deleteJobPost = async (req, res, next) => {
     next(error);
   }
 };
+
+/**
+ * PUT /api/job-posts/:id/complete - Mark job as completed and allow work posting
+ * This endpoint allows providers to mark a job as done, enabling them to post work
+ */
+export const markJobAsCompleted = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    // Find the job post
+    const jobPost = await JobPost.findById(id);
+
+    // Check if job post exists
+    if (!jobPost) {
+      return res.status(404).json({
+        success: false,
+        statusCode: 404,
+        message: "Job post not found",
+      });
+    }
+
+    // Find the provider's application for this job
+    const application = jobPost.applications.find(
+      (app) => app.providerId.toString() === req.user.id
+    );
+
+    // Verify provider was approved for this job
+    if (!application || application.status !== "approved") {
+      return res.status(403).json({
+        success: false,
+        statusCode: 403,
+        message: "You can only complete jobs you were approved for",
+      });
+    }
+
+    // Check if job is already completed
+    if (jobPost.jobStatus === "completed") {
+      return res.status(400).json({
+        success: false,
+        statusCode: 400,
+        message: "This job is already marked as completed",
+      });
+    }
+
+    // Update overall job status to completed
+    jobPost.jobStatus = "completed";
+    jobPost.assignedProviderId = req.user.id;
+
+    // Save the updated job post
+    await jobPost.save();
+
+    // Return success response with job details
+    const populatedJobPost = await JobPost.findById(jobPost._id)
+      .populate("service_id", "name category")
+      .populate("customerId", "name email")
+      .populate("applications.providerId", "name email");
+
+    return res.status(200).json({
+      success: true,
+      statusCode: 200,
+      message: "Job marked as completed. You can now post your work entry for this job.",
+      data: {
+        jobPost: populatedJobPost,
+        canPostWork: true,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};

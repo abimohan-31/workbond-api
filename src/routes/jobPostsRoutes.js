@@ -9,6 +9,7 @@ import {
   getJobPostById,
   rejectApplication,
   updateJobPost,
+  markJobAsCompleted,
 } from "../controllers/jobPostsController.js";
 const jobPostsRouter = express.Router();
 
@@ -50,6 +51,14 @@ jobPostsRouter.post(
   verifyToken,
   verifyRole("provider"),
   applyToJobPost
+);
+
+// Mark a job as completed - providers use this to indicate they finished a job, enabling work posting
+jobPostsRouter.put(
+  "/:id/complete",
+  verifyToken,
+  verifyRole("provider"),
+  markJobAsCompleted
 );
 
 export default jobPostsRouter;

@@ -23,6 +23,9 @@ import {
   approveProvider,
   rejectProvider,
   deleteProvider,
+  createWorkEntryAfterCompletion,
+  getAllWorkEntries,
+  getWorkEntriesFromCompletedJobs,
 } from "../controllers/providersController.js";
 
 const providersRouter = express.Router();
@@ -36,69 +39,7 @@ providersRouter.get("/public/:providerId/work-images", getPublicWorkImages);
 // Allows providers to check their approval status before they can log in
 providersRouter.get("/check-approval/:id", checkApprovalStatus);
 
-// Protected routes (require authentication, provider role, and approval)
-providersRouter.use(verifyProviderApproval);
-
-// Profile routes (no subscription required)
-providersRouter.get(
-  "/profile",
-  verifyToken,
-  verifyRole("provider"),
-  getProfile
-);
-providersRouter.put(
-  "/profile",
-  verifyToken,
-  verifyRole("provider"),
-  updateProfile
-);
-
-// Profile image routes
-providersRouter.patch(
-  "/profile/image",
-  verifyToken,
-  verifyRole("provider"),
-  updateProfileImage
-);
-providersRouter.delete(
-  "/profile/image",
-  verifyToken,
-  verifyRole("provider"),
-  deleteProfileImage
-);
-
-// Work portfolio routes
-providersRouter.post(
-  "/work-images",
-  verifyToken,
-  verifyRole("provider"),
-  createWorkImage
-);
-providersRouter.get(
-  "/work-images",
-  verifyToken,
-  verifyRole("provider"),
-  getAllWorkImages
-);
-providersRouter.get(
-  "/work-images/:id",
-  verifyToken,
-  verifyRole("provider"),
-  getWorkImageById
-);
-providersRouter.put(
-  "/work-images/:id",
-  verifyToken,
-  verifyRole("provider"),
-  updateWorkImage
-);
-providersRouter.delete(
-  "/work-images/:id",
-  verifyToken,
-  verifyRole("provider"),
-  deleteWorkImage
-);
-
+// Admin routes (must be before verifyProviderApproval middleware)
 //get pending providers
 providersRouter.get(
   "/pending",
@@ -134,6 +75,94 @@ providersRouter.delete(
   verifyToken,
   verifyRole("admin"),
   deleteProvider
+);
+
+// Protected routes (require authentication, provider role, and approval)
+providersRouter.use(verifyProviderApproval);
+
+// Profile routes (no subscription required)
+providersRouter.get(
+  "/profile",
+  verifyToken,
+  verifyRole("provider"),
+  getProfile
+);
+providersRouter.put(
+  "/profile",
+  verifyToken,
+  verifyRole("provider"),
+  updateProfile
+);
+
+// Profile image routes
+providersRouter.patch(
+  "/profile/image",
+  verifyToken,
+  verifyRole("provider"),
+  updateProfileImage
+);
+providersRouter.delete(
+  "/profile/image",
+  verifyToken,
+  verifyRole("provider"),
+  deleteProfileImage
+);
+
+// Work portfolio routes (legacy endpoints - kept for backward compatibility)
+providersRouter.post(
+  "/work-images",
+  verifyToken,
+  verifyRole("provider"),
+  createWorkImage
+);
+providersRouter.get(
+  "/work-images",
+  verifyToken,
+  verifyRole("provider"),
+  getAllWorkImages
+);
+providersRouter.get(
+  "/work-images/:id",
+  verifyToken,
+  verifyRole("provider"),
+  getWorkImageById
+);
+providersRouter.put(
+  "/work-images/:id",
+  verifyToken,
+  verifyRole("provider"),
+  updateWorkImage
+);
+providersRouter.delete(
+  "/work-images/:id",
+  verifyToken,
+  verifyRole("provider"),
+  deleteWorkImage
+);
+
+// New work entry routes for dynamic post-completion work posting
+// Post work entry after completing a job - main endpoint for providers to add work to portfolio
+providersRouter.post(
+  "/work-entries",
+  verifyToken,
+  verifyRole("provider"),
+  createWorkEntryAfterCompletion
+);
+
+// Get all work entries with filtering options - enhanced version with better filtering
+providersRouter.get(
+  "/work-entries",
+  verifyToken,
+  verifyRole("provider"),
+  getAllWorkEntries
+);
+
+// Get work entries that are linked to completed jobs - shows which work came from actual job completions
+providersRouter.get(
+  "/work-entries/from-jobs",
+  verifyToken,
+  verifyRole("provider"),
+  getWorkEntriesFromCompletedJobs
 );
 
 export default providersRouter;

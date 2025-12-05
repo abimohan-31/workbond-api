@@ -75,6 +75,25 @@ const providerSchema = new mongoose.Schema(
           type: String,
           default: "",
         },
+        // Link work entry to a completed job (optional)
+        // This allows providers to associate their work with specific completed jobs
+        jobPostId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "JobPost",
+          default: null,
+        },
+        // Track when the job was completed (optional)
+        // Helps providers remember when they finished the work
+        completedAt: {
+          type: Date,
+          default: null,
+        },
+        // Customer feedback or notes about the work (optional)
+        // Allows providers to add context about customer satisfaction
+        customerFeedback: {
+          type: String,
+          default: "",
+        },
         createdAt: {
           type: Date,
           default: Date.now,
