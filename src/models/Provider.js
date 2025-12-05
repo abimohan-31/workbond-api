@@ -100,11 +100,12 @@ const providerSchema = new mongoose.Schema(
         },
       },
     ],
-    role: {
-      type: String,
-      enum: ["admin", "provider", "customer"],
-      default: "provider",
+
+    isActive: {
+      type: Boolean,
+      default: false,
     },
+
     isApproved: {
       type: Boolean,
       default: false,
