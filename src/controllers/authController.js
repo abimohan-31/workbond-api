@@ -297,29 +297,32 @@ export const login = async (req, res, next) => {
     }
 
     // Generate token
-    const token = generateToken(user._id, role);
-    console.log("Login successful, token generated");
+    // Determine exact role for token
+    let tokenRole = "";
+    if (role === "admin") tokenRole = "admin";
+    else if (role === "provider") tokenRole = "provider";
+    else if (role === "customer") tokenRole = "customer";
 
-    // Remove password from response
-    const userData = user.toObject();
-    delete userData.password;
+    // Generate token with correct role
+    const token = generateToken(user._id, tokenRole);
 
-    // STORE TOKEN IN COOKIE
+    // Store in cookie
     res.cookie("token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production" ? true : false,
       sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+      maxAge: 30 * 24 * 60 * 60 * 1000,
+      path: "/",
     });
 
+    // Send exact role in response
     return res.status(200).json({
       success: true,
       statusCode: 200,
       message: "Login successful",
       data: {
         user: userData,
-        token,
-        role: user.role,
+        role: tokenRole,
       },
     });
   } catch (error) {
