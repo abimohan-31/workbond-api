@@ -19,7 +19,6 @@ const jobPostSchema = new mongoose.Schema(
       type: String,
       required: [true, "Duration is required"],
       trim: true,
-      // Examples: "2 weeks", "1 month", "3 days", "Contract-based"
     },
     service_id: {
       type: mongoose.Schema.Types.ObjectId,
@@ -30,7 +29,6 @@ const jobPostSchema = new mongoose.Schema(
     location: {
       type: String,
       trim: true,
-      // Optional field
     },
     customerId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -56,15 +54,11 @@ const jobPostSchema = new mongoose.Schema(
         },
       },
     ],
-    // Overall job status to track if job is done
-    // Helps customers and providers know the current state of the job
     jobStatus: {
       type: String,
       enum: ["open", "in_progress", "completed", "cancelled"],
       default: "open",
     },
-    // Track which provider is currently working on the job
-    // Only one provider can be assigned to a job at a time
     assignedProviderId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: Provider,

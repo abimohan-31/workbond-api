@@ -5,7 +5,6 @@ import Service from "./Service.js";
 import Customer from "./Customer.js";
 
 // WorkPost model represents completed works posted by service providers
-// This is separate from JobPost which represents job postings by customers
 const workPostSchema = new mongoose.Schema(
   {
     title: {

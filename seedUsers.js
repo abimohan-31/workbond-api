@@ -10,6 +10,7 @@ import PriceList from "./src/models/PriceList.js";
 import Review from "./src/models/Review.js";
 import JobPost from "./src/models/JobPost.js";
 import Subscription from "./src/models/Subscription.js";
+import WorkPost from "./src/models/WorkPost.js";
 
 dotenv.config();
 
@@ -1329,12 +1330,12 @@ const seedJobPosts = async (customers, services) => {
 
       for (let j = 0; j < numApplications; j++) {
         const provider = getRandom(allProviders);
-        
+
         // Check if provider already applied
         const alreadyApplied = jobPost.applications.some(
           (app) => app.providerId.toString() === provider._id.toString()
         );
-        
+
         if (!alreadyApplied) {
           // Select status based on weights
           const random = Math.random();
@@ -1350,7 +1351,9 @@ const seedJobPosts = async (customers, services) => {
           jobPost.applications.push({
             providerId: provider._id,
             status: status,
-            appliedAt: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000), // Random date within last 7 days
+            appliedAt: new Date(
+              Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000
+            ), // Random date within last 7 days
           });
         }
       }
@@ -1360,6 +1363,300 @@ const seedJobPosts = async (customers, services) => {
     return createdJobPosts;
   } catch (error) {
     console.error("Error seeding job posts:", error);
+    throw error;
+  }
+};
+
+// Seed Work Posts
+const seedWorkPosts = async (providers, jobPosts, services) => {
+  try {
+    console.log("Seeding Work Posts...");
+
+    const workPosts = [];
+
+    // Helper function to get random element from array
+    const getRandom = (arr) => arr[Math.floor(Math.random() * arr.length)];
+
+    // Get approved providers only (work posts are from approved providers)
+    const approvedProviders = providers.filter((p) => p.isApproved === true);
+
+    // Work post templates matching provider skills
+    const workTemplates = [
+      {
+        title: "Modern Kitchen Renovation",
+        description:
+          "Complete kitchen makeover with new cabinets and modern fixtures",
+        category: "Home Renovation",
+        beforeImage:
+          "https://images.unsplash.com/photo-1556911220-bff31c812dba?w=800",
+        afterImage:
+          "https://images.unsplash.com/photo-1556911220-e15b29be8c8f?w=800",
+        skills: ["Painting", "Plumbing"],
+      },
+      {
+        title: "Bathroom Tile Installation",
+        description:
+          "Professional tile installation with waterproofing in master bathroom",
+        category: "Plumbing & Tiling",
+        beforeImage:
+          "https://images.unsplash.com/photo-1620626011761-996317b8d101?w=800",
+        afterImage:
+          "https://images.unsplash.com/photo-1620626011761-996317b8d101?w=800",
+        skills: ["Plumbing"],
+      },
+      {
+        title: "Living Room Interior Painting",
+        description:
+          "Fresh coat of paint for entire living room with accent walls",
+        category: "Painting",
+        beforeImage:
+          "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=800",
+        afterImage:
+          "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=800",
+        skills: ["Painting"],
+      },
+      {
+        title: "Garden Landscaping Project",
+        description:
+          "Complete garden redesign with new plants, pathways, and features",
+        category: "Gardening",
+        beforeImage:
+          "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=800",
+        afterImage:
+          "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=800",
+        skills: ["Gardening"],
+      },
+      {
+        title: "Deep House Cleaning",
+        description:
+          "Thorough deep cleaning of entire house including carpets and windows",
+        category: "Cleaning",
+        beforeImage:
+          "https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=800",
+        afterImage:
+          "https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=800",
+        skills: ["Cleaning"],
+      },
+      {
+        title: "Electrical Wiring Upgrade",
+        description:
+          "Complete electrical wiring upgrade for home safety and modern appliances",
+        category: "Electrical",
+        beforeImage:
+          "https://images.unsplash.com/photo-1621905251918-48416bd8575a?w=800",
+        afterImage:
+          "https://images.unsplash.com/photo-1621905251918-48416bd8575a?w=800",
+        skills: ["Electrician"],
+      },
+      {
+        title: "Plumbing System Repair",
+        description:
+          "Fixed multiple leaks and upgraded plumbing fixtures throughout the house",
+        category: "Plumbing",
+        beforeImage:
+          "https://images.unsplash.com/photo-1621905251918-48416bd8575a?w=800",
+        afterImage:
+          "https://images.unsplash.com/photo-1621905251918-48416bd8575a?w=800",
+        skills: ["Plumbing"],
+      },
+      {
+        title: "Exterior House Painting",
+        description:
+          "Complete exterior painting with weatherproofing and primer application",
+        category: "Painting",
+        beforeImage:
+          "https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800",
+        afterImage:
+          "https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800",
+        skills: ["Painting"],
+      },
+      {
+        title: "Office Deep Cleaning",
+        description:
+          "Professional deep cleaning service for commercial office space",
+        category: "Cleaning",
+        beforeImage:
+          "https://images.unsplash.com/photo-1497366216548-37526070297c?w=800",
+        afterImage:
+          "https://images.unsplash.com/photo-1497366216548-37526070297c?w=800",
+        skills: ["Cleaning"],
+      },
+      {
+        title: "Garden Maintenance Service",
+        description:
+          "Regular garden maintenance including lawn care, pruning, and plant care",
+        category: "Gardening",
+        beforeImage:
+          "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=800",
+        afterImage:
+          "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=800",
+        skills: ["Gardening", "Cleaning"],
+      },
+      {
+        title: "Electrical Panel Upgrade",
+        description:
+          "Upgraded electrical panel and installed new safety features",
+        category: "Electrical",
+        beforeImage:
+          "https://images.unsplash.com/photo-1621905251918-48416bd8575a?w=800",
+        afterImage:
+          "https://images.unsplash.com/photo-1621905251918-48416bd8575a?w=800",
+        skills: ["Electrician"],
+      },
+      {
+        title: "Carpet Cleaning Service",
+        description:
+          "Professional carpet cleaning for living room and bedrooms",
+        category: "Cleaning",
+        beforeImage:
+          "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=800",
+        afterImage:
+          "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=800",
+        skills: ["Cleaning"],
+      },
+      {
+        title: "Window Cleaning Service",
+        description:
+          "Complete window cleaning for 3-story building inside and out",
+        category: "Cleaning",
+        beforeImage:
+          "https://images.unsplash.com/photo-1497366216548-37526070297c?w=800",
+        afterImage:
+          "https://images.unsplash.com/photo-1497366216548-37526070297c?w=800",
+        skills: ["Cleaning"],
+      },
+      {
+        title: "Tree Trimming and Pruning",
+        description: "Professional tree trimming and pruning for garden safety",
+        category: "Gardening",
+        beforeImage:
+          "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=800",
+        afterImage:
+          "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=800",
+        skills: ["Gardening"],
+      },
+      {
+        title: "Leak Detection and Repair",
+        description:
+          "Detected and fixed multiple water leaks throughout the property",
+        category: "Plumbing",
+        beforeImage:
+          "https://images.unsplash.com/photo-1621905251918-48416bd8575a?w=800",
+        afterImage:
+          "https://images.unsplash.com/photo-1621905251918-48416bd8575a?w=800",
+        skills: ["Plumbing"],
+      },
+      {
+        title: "Bedroom Interior Painting",
+        description:
+          "Fresh paint job for master bedroom with modern color scheme",
+        category: "Painting",
+        beforeImage:
+          "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=800",
+        afterImage:
+          "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=800",
+        skills: ["Painting"],
+      },
+    ];
+
+    // Customer feedback options
+    const feedbackOptions = [
+      "Excellent work! Very professional and completed on time.",
+      "Outstanding quality. Highly satisfied with the results.",
+      "Great service from start to finish. Will definitely hire again.",
+      "Very professional and exceeded expectations.",
+      "Quality work at reasonable prices. Highly recommended!",
+      "Excellent communication and attention to detail.",
+      "Very satisfied with the service. Great job!",
+      "",
+      "",
+      "",
+    ];
+
+    // Get completed job posts (if any)
+    const completedJobPosts = jobPosts.filter(
+      (job) => job.jobStatus === "completed"
+    );
+
+    // Create work posts for approved providers
+    // Each provider gets 1-3 work posts
+    for (const provider of approvedProviders) {
+      const numWorkPosts = Math.floor(Math.random() * 3) + 1; // 1-3 work posts per provider
+
+      for (let i = 0; i < numWorkPosts; i++) {
+        // Filter templates by provider skills
+        const matchingTemplates = workTemplates.filter((template) =>
+          template.skills.some((skill) =>
+            provider.skills.some(
+              (pSkill) => pSkill.toLowerCase() === skill.toLowerCase()
+            )
+          )
+        );
+
+        if (matchingTemplates.length === 0) continue;
+
+        const template = getRandom(matchingTemplates);
+        const feedback = getRandom(feedbackOptions);
+
+        // 30% chance to link to a completed job post
+        let linkedJobPost = null;
+        let serviceId = null;
+        let customerId = null;
+
+        if (completedJobPosts.length > 0 && Math.random() < 0.3) {
+          linkedJobPost = getRandom(completedJobPosts);
+          // Check if provider was assigned to this job
+          const application = linkedJobPost.applications.find(
+            (app) => app.providerId.toString() === provider._id.toString()
+          );
+          if (application && application.status === "approved") {
+            serviceId = linkedJobPost.service_id;
+            customerId = linkedJobPost.customerId;
+          } else {
+            linkedJobPost = null; // Don't link if provider wasn't assigned
+          }
+        }
+
+        // If not linked to job, find matching service
+        if (!serviceId && template.skills.length > 0) {
+          const matchingService = services.find((s) =>
+            template.skills.some(
+              (skill) =>
+                s.name.toLowerCase().includes(skill.toLowerCase()) ||
+                s.category.toLowerCase().includes(skill.toLowerCase())
+            )
+          );
+          if (matchingService) {
+            serviceId = matchingService._id;
+          }
+        }
+
+        const completedAt = new Date(
+          Date.now() - Math.random() * 180 * 24 * 60 * 60 * 1000
+        ); // Random date within last 180 days
+
+        workPosts.push({
+          title: template.title,
+          description: template.description,
+          beforeImage: template.beforeImage,
+          afterImage: template.afterImage,
+          category: template.category,
+          providerId: provider._id,
+          jobPostId: linkedJobPost ? linkedJobPost._id : null,
+          service_id: serviceId,
+          customerId: customerId,
+          completedAt: completedAt,
+          customerFeedback: feedback,
+          isPublic: true,
+        });
+      }
+    }
+
+    const createdWorkPosts = await WorkPost.insertMany(workPosts);
+    console.log(`${createdWorkPosts.length} work posts created`);
+    return createdWorkPosts;
+  } catch (error) {
+    console.error("Error seeding work posts:", error);
     throw error;
   }
 };
@@ -1461,6 +1758,7 @@ async function seedUsers() {
     await Review.deleteMany();
     await JobPost.deleteMany();
     await Subscription.deleteMany();
+    await WorkPost.deleteMany();
 
     console.log("Old data removed");
 
@@ -1495,10 +1793,11 @@ async function seedUsers() {
     // Seed subscriptions (after providers are created)
     const subscriptions = await seedSubscriptions(createdProviders);
 
+    // Seed work posts (after providers, job posts, and services are created)
+    const workPosts = await seedWorkPosts(createdProviders, jobPosts, services);
+
     // Summary
-    console.log("=".repeat(50));
     console.log("Seeding Summary:");
-    console.log("=".repeat(50));
     console.log(`Providers: ${providerData.length}`);
     console.log(`Customers: ${customerData.length}`);
     console.log(`Services: ${services.length}`);
@@ -1506,30 +1805,9 @@ async function seedUsers() {
     console.log(`Reviews: ${reviews.length}`);
     console.log(`Job Posts: ${jobPosts.length}`);
     console.log(`Subscriptions: ${subscriptions.length}`);
-    console.log("=".repeat(50));
+    console.log(`Work Posts: ${workPosts.length}`);
     console.log("Seed successfully completed");
     console.log("");
-    console.log("Example Price Lists:");
-    console.log(" - Painting: Rs. 200-300 per square foot");
-    console.log(
-      " - Gardening: Rs. 5,000-15,000 (maintenance) or Rs. 20,000-100,000 (landscaping)"
-    );
-    console.log(" - Cleaning: Rs. 10,000-30,000 (house/deep cleaning)");
-    console.log(
-      " - Plumbing: Rs. 5,000-15,000 (leak fixing) or Rs. 8,000/hour (repairs)"
-    );
-    console.log(
-      " - Electrical: Rs. 9,000/hour (repairs) or Rs. 15,000 (maintenance)"
-    );
-    console.log(
-      " - Carpentry: Rs. 3,000-15,000 (furniture repair) or Rs. 5,000/cabinet"
-    );
-    console.log(
-      " - Handyman: Rs. 4,000/hour (general) or Rs. 5,000-15,000 (appliance repair)"
-    );
-    console.log(" - Moving: Rs. 15,000-50,000 (based on distance and items)");
-    console.log("");
-
     process.exit();
   } catch (error) {
     console.error("Seed failed", error);
