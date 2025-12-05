@@ -80,10 +80,19 @@ export const verifyToken = async (req, res, next) => {
       });
     }
     if (error.name === "TokenExpiredError") {
+      // Clear the expired cookie
+      res.clearCookie("access_token", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production" ? true : false,
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+        path: "/",
+      });
+      
       return res.status(401).json({
         success: false,
         statusCode: 401,
         message: "Token expired. Please log in again.",
+        expired: true, // Flag for frontend to handle logout
       });
     }
     return res.status(500).json({
