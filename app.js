@@ -26,7 +26,7 @@ app.use(
   cors({
     origin: [
       "http://localhost:3000",
-      "https://workbond.vercel.app",
+      "https://work-bond-app.vercel.app/",
       "https://workbond-git-main.vercel.app",
       /\.vercel\.app$/, // Allow all Vercel preview deployments
     ],
