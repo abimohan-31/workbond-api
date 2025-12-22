@@ -67,17 +67,25 @@ app.use(defaultError);
 
 // Connect Server
 // Connect Server
-const startServer = async () => {
-  try {
-    await connectDB();
-    const PORT = process.env.PORT || 5000;
-    app.listen(PORT, () => {
-      console.log(`Server is running on http://localhost:${PORT}`);
-    });
-  } catch (error) {
-    console.error("Failed to start server:", error);
-    process.exit(1);
-  }
-};
+// Export app for Vercel
+export default app;
 
-startServer();
+// Only start the server if we're not running on Vercel
+if (!process.env.VERCEL) {
+  const startServer = async () => {
+    try {
+      await connectDB();
+      const PORT = process.env.PORT || 5000;
+      app.listen(PORT, () => {
+        console.log(`Server is running on http://localhost:${PORT}`);
+      });
+    } catch (error) {
+      console.error("Failed to start server:", error);
+    }
+  };
+
+  startServer();
+} else {
+  // On Vercel, just connect to DB
+  connectDB().catch((err) => console.error("Database connection error:", err));
+}

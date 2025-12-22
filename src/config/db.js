@@ -13,8 +13,7 @@ const connectDB = async () => {
     console.log(`MongoDB Connected: ${conn.connection.host}`);
   } catch (error) {
     console.error(`Error: ${error.message}`);
-    console.error("Please check your MongoDB Atlas IP Whitelist and Connection String.");
-    process.exit(1);
+    // Don't exit process in production/vercel
   }
 };
 
