@@ -29,6 +29,10 @@ const providerSchema = new mongoose.Schema(
       type: String,
       required: [true, "Address is required"],
     },
+    fullAddress: {
+      type: String,
+      required: [true, "Full address is required"],
+    },
     experience_years: {
       type: Number,
       required: [true, "Experience years are required"],
