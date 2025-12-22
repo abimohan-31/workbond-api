@@ -2,6 +2,7 @@ import JobPost from "../models/JobPost.js";
 import Service from "../models/Service.js";
 import Customer from "../models/Customer.js";
 import Provider from "../models/Provider.js";
+import Notification from "../models/Notification.js";
 import { queryHelper } from "../utils/queryHelper.js";
 
 /**
@@ -405,6 +406,14 @@ export const approveApplication = async (req, res, next) => {
     application.status = "approved";
     await jobPost.save();
 
+    // Create notification for provider
+    await Notification.create({
+      recipient: application.providerId,
+      recipientModel: "Provider",
+      type: "success",
+      message: `Your application for "${jobPost.title}" has been approved!`,
+    });
+
     const populatedJobPost = await JobPost.findById(jobPost._id)
       .populate("service_id", "name category description")
       .populate("customerId", "name email phone")
@@ -478,6 +487,14 @@ export const rejectApplication = async (req, res, next) => {
     // Update application status
     application.status = "rejected";
     await jobPost.save();
+
+    // Create notification for provider
+    await Notification.create({
+      recipient: application.providerId,
+      recipientModel: "Provider",
+      type: "error",
+      message: `Your application for "${jobPost.title}" was rejected.`,
+    });
 
     const populatedJobPost = await JobPost.findById(jobPost._id)
       .populate("service_id", "name category description")

@@ -116,8 +116,17 @@ export const register = async (req, res, next) => {
         return res.status(400).json({
           success: false,
           statusCode: 400,
-          message: "Address is required for providers",
-          errors: [{ field: "address", message: "Address is required" }],
+          message: "District is required for providers",
+          errors: [{ field: "address", message: "District is required" }],
+        });
+      }
+
+      if (!fullAddress) {
+        return res.status(400).json({
+          success: false,
+          statusCode: 400,
+          message: "Full address is required for providers",
+          errors: [{ field: "fullAddress", message: "Full address is required" }],
         });
       }
 
@@ -161,6 +170,7 @@ export const register = async (req, res, next) => {
         password,
         phone,
         address,
+        fullAddress,
         experience_years,
         skills,
         role: "provider",
@@ -705,6 +715,59 @@ export const getAllAdmins = async (req, res, next) => {
           pages: Math.ceil(total / limit),
         },
       },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+// POST /api/users/change-password - Change password for logged in user
+export const changePassword = async (req, res, next) => {
+  try {
+    const { oldPassword, newPassword } = req.body;
+
+    if (!oldPassword || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        statusCode: 400,
+        message: "Old and new passwords are required",
+      });
+    }
+
+    let user = null;
+    if (req.user.role === "admin") {
+      user = await User.findById(req.user.id).select("+password");
+    } else if (req.user.role === "provider") {
+      user = await Provider.findById(req.user.id).select("+password");
+    } else if (req.user.role === "customer") {
+      user = await Customer.findById(req.user.id).select("+password");
+    }
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        statusCode: 404,
+        message: "User not found",
+      });
+    }
+
+    // Verify old password
+    const isMatch = await user.comparePassword(oldPassword);
+    if (!isMatch) {
+      return res.status(401).json({
+        success: false,
+        statusCode: 401,
+        message: "Incorrect old password",
+      });
+    }
+
+    // Set new password (pre-save hook will hash it)
+    user.password = newPassword;
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      statusCode: 200,
+      message: "Password changed successfully",
     });
   } catch (error) {
     next(error);

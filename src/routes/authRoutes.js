@@ -9,6 +9,7 @@ import {
   deleteUser,
   createUser,
   getAllAdmins,
+  changePassword,
 } from "../controllers/authController.js";
 
 const usersRouter = express.Router();
@@ -21,6 +22,8 @@ usersRouter.post("/login", login); // all roles
 usersRouter.post("/logout", verifyToken, logout); // all authenticated users
 usersRouter.get("/:id", verifyToken, getUserById); // all authenticated users
 usersRouter.put("/:id", verifyToken, updateUser); // all authenticated users (can update own profile)
+usersRouter.post("/change-password", verifyToken, changePassword); // all authenticated users
+
 
 // Admin only routes
 usersRouter.get("/admins", verifyToken, verifyRole("admin"), getAllAdmins); // admin only

@@ -1,6 +1,11 @@
 import Provider from "../models/Provider.js";
 import Subscription from "../models/Subscription.js";
 import Review from "../models/Review.js";
+import Notification from "../models/Notification.js";
+import {
+  sendApprovalEmail,
+  sendRejectionEmail,
+} from "../utils/emailService.js";
 
 // GET /api/providers/check-approval/:id - Check approval status by provider ID (public route)
 // Allows providers to check their approval status without authentication
@@ -204,16 +209,27 @@ export const getReviews = async (req, res, next) => {
 // GET /api/providers/public - Get all approved providers (public route)
 export const getAllProviders = async (req, res, next) => {
   try {
-    const { page = 1, limit = 25, q = "" } = req.query;
+    const { page = 1, limit = 25, q = "", skills = "" } = req.query;
 
     const filter = {
       isApproved: true,
-      $or: [
-        { name: { $regex: q, $options: "i" } },
-        { email: { $regex: q, $options: "i" } },
-        { phone: { $regex: q, $options: "i" } },
+      $and: [
+        {
+          $or: [
+            { name: { $regex: q, $options: "i" } },
+            { email: { $regex: q, $options: "i" } },
+            { phone: { $regex: q, $options: "i" } },
+          ],
+        },
       ],
     };
+
+    if (skills) {
+      const skillArray = skills.split(",").map((s) => s.trim());
+      filter.$and.push({
+        skills: { $in: skillArray.map((s) => new RegExp(s, "i")) },
+      });
+    }
     const providers = await Provider.find(filter)
       .select("-password")
       .skip((page - 1) * limit)
@@ -324,6 +340,17 @@ export const approveProvider = async (req, res, next) => {
 
     provider.isApproved = true;
     await provider.save();
+
+    // Send email
+    await sendApprovalEmail(provider.email, provider.name);
+
+    // Create notification
+    await Notification.create({
+      recipient: provider._id,
+      recipientModel: "Provider",
+      type: "success",
+      message: "Congratulations! Your account has been approved.",
+    });
 
     return res.status(200).json({
       success: true,
@@ -445,6 +472,19 @@ export const rejectProvider = async (req, res, next) => {
 
     provider.isApproved = false;
     await provider.save();
+
+    // Send email
+    await sendRejectionEmail(provider.email, provider.name, reason);
+
+    // Create notification
+    await Notification.create({
+      recipient: provider._id,
+      recipientModel: "Provider", // Assuming providers are also Users or handled here
+      type: "error",
+      message: `Your account application was rejected. Reason: ${
+        reason || "No reason provided"
+      }`,
+    });
 
     const providerData = provider.toObject();
     delete providerData.password;
