@@ -18,15 +18,12 @@ import paymentsRouter from "./src/routes/paymentsRoutes.js";
 
 // Initialize express
 const app = express();
-app.use(express.json());
-app.use(cookieParser()); // Parse cookies from requests
-
 // CORS configuration
 app.use(
   cors({
     origin: [
       "http://localhost:3000",
-      "https://work-bond-app.vercel.app/",
+      "https://work-bond-app.vercel.app",
       "https://workbond-git-main.vercel.app",
       /\.vercel\.app$/, // Allow all Vercel preview deployments
     ],
@@ -35,6 +32,13 @@ app.use(
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
+
+// IMPORTANT: Stripe webhook route must come BEFORE express.json()
+// for signatures to verify correctly since it needs the raw body
+app.use("/api/payments/webhook", paymentsRouter);
+
+app.use(express.json());
+app.use(cookieParser()); // Parse cookies from requests
 
 // Test if the server is working or not
 app.get("/", (req, res) => {
@@ -58,6 +62,7 @@ app.use("/api/price-list", priceListRouter);
 app.use("/api/jobposts", jobPostsRouter);
 app.use("/api/workposts", workPostsRouter);
 app.use("/api/payments", paymentsRouter);
+
 
 // Page not found
 app.use(notFound);
@@ -86,6 +91,8 @@ if (!process.env.VERCEL) {
 
   startServer();
 } else {
-  // On Vercel, just connect to DB
+  // On Vercel, we can rely on lazy connection or pre-connect
+  // Awaiting here might help with initial spin-up performance
   connectDB().catch((err) => console.error("Database connection error:", err));
 }
+
