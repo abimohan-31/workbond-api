@@ -6,6 +6,8 @@ import {
   createSubscription,
   updateSubscription,
   deleteSubscription,
+  createUserSubscription,
+  getSubscriptionsAdminSummary,
 } from "../controllers/subscriptionsController.js";
 
 const subscriptionsRouter = express.Router();
@@ -14,19 +16,16 @@ const subscriptionsRouter = express.Router();
 subscriptionsRouter.use(verifyToken);
 
 // GET routes
-// Admin: Can view all subscriptions
-// Provider: Can view only their own subscriptions (filtered in controller)
-subscriptionsRouter.get("/", verifyRole("admin", "provider"), getAllSubscriptions);
-subscriptionsRouter.get("/:id", verifyRole("admin", "provider"), getSubscriptionById);
+// Admin: Can view all subscriptions and summary
+subscriptionsRouter.get("/admin-summary", verifyRole("admin"), getSubscriptionsAdminSummary);
+subscriptionsRouter.get("/", verifyRole("admin", "provider", "customer"), getAllSubscriptions);
+subscriptionsRouter.get("/:id", verifyRole("admin", "provider", "customer"), getSubscriptionById);
 
 // POST, PUT, DELETE routes (admin only)
 subscriptionsRouter.post("/", verifyRole("admin"), createSubscription);
 
-// Provider self-subscription route
-subscriptionsRouter.post("/provider/subscribe", verifyRole("provider"), async (req, res, next) => {
-  const { createProviderSubscription } = await import("../controllers/subscriptionsController.js");
-  return createProviderSubscription(req, res, next);
-});
+// User self-subscription route
+subscriptionsRouter.post("/subscribe", verifyRole("provider", "customer"), createUserSubscription);
 
 subscriptionsRouter.put("/:id", verifyRole("admin"), updateSubscription);
 subscriptionsRouter.delete("/:id", verifyRole("admin"), deleteSubscription);

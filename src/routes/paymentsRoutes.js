@@ -3,7 +3,7 @@ import { verifyRole, verifyToken } from "../middleware/authMiddleware.js";
 import {
   handleWebhook,
   createSubscriptionPayment,
-  getProviderSubscriptionStatus,
+  getUserSubscriptionStatus,
 } from "../controllers/paymentsController.js";
 
 const paymentsRouter = express.Router();
@@ -17,15 +17,15 @@ paymentsRouter.post(
 paymentsRouter.post(
   "/subscription-payment",
   verifyToken,
-  verifyRole("provider"),
+  verifyRole("provider", "customer"),
   createSubscriptionPayment
 );
 
 paymentsRouter.get(
-  "/provider-subscription",
+  "/user-subscription",
   verifyToken,
-  verifyRole("provider"),
-  getProviderSubscriptionStatus
+  verifyRole("provider", "customer"),
+  getUserSubscriptionStatus
 );
 
 export default paymentsRouter;

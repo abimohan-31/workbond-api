@@ -1,17 +1,21 @@
 import mongoose from "mongoose";
-import Provider from "./Provider.js";
 
 const subscriptionSchema = new mongoose.Schema(
   {
-    provider_id: {
+    userId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: Provider,
-      required: [true, "Provider ID is required"],
+      required: [true, "User ID is required"],
+      refPath: "userType",
+    },
+    userType: {
+      type: String,
+      required: true,
+      enum: ["Provider", "Customer"],
     },
     plan_name: {
       type: String,
       required: [true, "Plan name is required"],
-      enum: ["Free", "Standard", "Premium"],
+      enum: ["Free", "Standard", "Premium", "Business", "Individual"],
       default: "Free",
       trim: true,
     },
@@ -67,7 +71,7 @@ subscriptionSchema.pre("save", function (next) {
   next();
 });
 
-// ⚡ Index for faster lookups by provider
-subscriptionSchema.index({ provider_id: 1 });
+// ⚡ Index for faster lookups by user
+subscriptionSchema.index({ userId: 1 });
 
 export default mongoose.model("Subscription", subscriptionSchema);

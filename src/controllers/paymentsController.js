@@ -1,5 +1,6 @@
 import Stripe from "stripe";
 import Provider from "../models/Provider.js";
+import Customer from "../models/Customer.js";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -20,9 +21,10 @@ export const handleWebhook = async (req, res) => {
     case "checkout.session.completed":
       const session = event.data.object;
       
-      if (session.metadata.type === "provider_subscription") {
+      if (session.metadata.type === "subscription_payment") {
         const subscriptionId = session.metadata.subscriptionId;
-        const providerId = session.metadata.providerId;
+        const userId = session.metadata.userId;
+        const userType = session.metadata.userType;
 
         const Subscription = (await import("../models/Subscription.js")).default;
         const subscription = await Subscription.findById(subscriptionId);
@@ -33,11 +35,12 @@ export const handleWebhook = async (req, res) => {
           subscription.status = "Active";
           await subscription.save();
 
-          await Provider.findByIdAndUpdate(providerId, {
+          const Model = userType === "Provider" ? Provider : Customer;
+          await Model.findByIdAndUpdate(userId, {
             currentSubscriptionId: subscriptionId,
           });
 
-          console.log("Provider subscription payment completed:", subscriptionId);
+          console.log(`${userType} subscription payment completed:`, subscriptionId);
         }
       }
       break;
@@ -63,8 +66,8 @@ export const createSubscriptionPayment = async (req, res, next) => {
 
     const Subscription = (await import("../models/Subscription.js")).default;
     const subscription = await Subscription.findById(subscriptionId).populate(
-      "provider_id",
-      "name email stripeCustomerId"
+      "userId",
+      "name email stripeCustomerId role"
     );
 
     if (!subscription) {
@@ -75,7 +78,7 @@ export const createSubscriptionPayment = async (req, res, next) => {
       });
     }
 
-    if (subscription.provider_id._id.toString() !== req.user.id) {
+    if (subscription.userId._id.toString() !== req.user.id) {
       return res.status(403).json({
         success: false,
         statusCode: 403,
@@ -91,21 +94,23 @@ export const createSubscriptionPayment = async (req, res, next) => {
       });
     }
 
-    const provider = subscription.provider_id;
-    let stripeCustomerId = provider.stripeCustomerId;
+    const user = subscription.userId;
+    const userType = subscription.userType;
+    let stripeCustomerId = user.stripeCustomerId;
 
     if (!stripeCustomerId) {
       const stripeCustomer = await stripe.customers.create({
-        email: provider.email,
-        name: provider.name,
+        email: user.email,
+        name: user.name,
         metadata: {
-          providerId: req.user.id,
-          role: "provider",
+          userId: req.user.id,
+          role: user.role,
         },
       });
       stripeCustomerId = stripeCustomer.id;
 
-      await Provider.findByIdAndUpdate(req.user.id, {
+      const Model = userType === "Provider" ? Provider : Customer;
+      await Model.findByIdAndUpdate(req.user.id, {
         stripeCustomerId: stripeCustomerId,
       });
     }
@@ -131,12 +136,13 @@ export const createSubscriptionPayment = async (req, res, next) => {
         },
       ],
       mode: "payment",
-      success_url: `${process.env.CLIENT_URL}/provider/subscription/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.CLIENT_URL}/provider/subscription/cancel`,
+      success_url: `${process.env.CLIENT_URL}/${user.role}/subscription/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.CLIENT_URL}/${user.role}/subscription/cancel`,
       metadata: {
         subscriptionId: subscriptionId,
-        providerId: req.user.id,
-        type: "provider_subscription",
+        userId: req.user.id,
+        userType: userType,
+        type: "subscription_payment",
       },
     });
 
@@ -156,24 +162,26 @@ export const createSubscriptionPayment = async (req, res, next) => {
   }
 };
 
-export const getProviderSubscriptionStatus = async (req, res, next) => {
+export const getUserSubscriptionStatus = async (req, res, next) => {
   try {
     const Subscription = (await import("../models/Subscription.js")).default;
+    const userType = req.user.role.charAt(0).toUpperCase() + req.user.role.slice(1);
+    const Model = userType === "Provider" ? Provider : Customer;
 
-    const provider = await Provider.findById(req.user.id).populate(
+    const dbUser = await Model.findById(req.user.id).populate(
       "currentSubscriptionId"
     );
 
-    if (!provider) {
+    if (!dbUser) {
       return res.status(404).json({
         success: false,
         statusCode: 404,
-        message: "Provider not found",
+        message: "User not found",
       });
     }
 
     const subscriptions = await Subscription.find({
-      provider_id: req.user.id,
+      userId: req.user.id,
     }).sort({ createdAt: -1 });
 
     const activeSubscription = subscriptions.find(
@@ -184,6 +192,11 @@ export const getProviderSubscriptionStatus = async (req, res, next) => {
       (sub) => sub.paymentStatus === "pending"
     );
 
+    const trialPeriodDays = 30;
+    const trialExpiresAt = new Date(dbUser.createdAt);
+    trialExpiresAt.setDate(trialExpiresAt.getDate() + trialPeriodDays);
+    const isTrialActive = new Date() < trialExpiresAt;
+
     return res.status(200).json({
       success: true,
       statusCode: 200,
@@ -191,6 +204,8 @@ export const getProviderSubscriptionStatus = async (req, res, next) => {
         activeSubscription: activeSubscription || null,
         pendingSubscription: pendingSubscription || null,
         allSubscriptions: subscriptions,
+        isTrialActive,
+        trialExpiresAt,
       },
     });
   } catch (error) {

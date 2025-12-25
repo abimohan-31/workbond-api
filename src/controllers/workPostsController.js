@@ -138,21 +138,30 @@ export const createWorkPost = async (req, res, next) => {
       });
     }
 
-    const Subscription = (await import("../models/Subscription.js")).default;
-    const activeSubscription = await Subscription.findOne({
-      provider_id: req.user.id,
-      status: "Active",
-      paymentStatus: "paid",
-      end_date: { $gt: new Date() },
-    });
+    // Check for Free Trial or Active Subscription
+    const trialPeriodDays = 30;
+    const trialExpirationDate = new Date(provider.createdAt);
+    trialExpirationDate.setDate(trialExpirationDate.getDate() + trialPeriodDays);
+    const isWithinTrial = new Date() < trialExpirationDate;
 
-    if (!activeSubscription) {
-      return res.status(403).json({
-        success: false,
-        statusCode: 403,
-        message: "You need an active paid subscription to create work posts. Please subscribe to continue.",
-        requiresSubscription: true,
+    if (!isWithinTrial) {
+      const Subscription = (await import("../models/Subscription.js")).default;
+      const activeSubscription = await Subscription.findOne({
+        userId: req.user.id,
+        status: "Active",
+        paymentStatus: "paid",
+        end_date: { $gt: new Date() },
       });
+
+      if (!activeSubscription) {
+        return res.status(403).json({
+          success: false,
+          statusCode: 403,
+          message: "You need an active paid subscription to create work posts after your trial period. Please subscribe to continue.",
+          requiresSubscription: true,
+          trialExpired: true,
+        });
+      }
     }
 
     let jobPost = null;
