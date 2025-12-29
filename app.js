@@ -1,20 +1,20 @@
 import express from "express";
-import connectDB from "./config/db.js";
+import connectDB from "./src/config/db.js";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-import { defaultError, notFound } from "./middleware/ErrorHandlers.js";
+import { defaultError, notFound } from "./src/middleware/ErrorHandlers.js";
 
 // Import route groups
-import customersRouter from "./routes/customersRoutes.js";
-import providersRouter from "./routes/providersRoutes.js";
-import subscriptionsRouter from "./routes/subscriptionsRoutes.js";
-import reviewsRouter from "./routes/reviewsRoutes.js";
-import servicesRouter from "./routes/servicesRoutes.js";
-import priceListRouter from "./routes/priceListRoutes.js";
-import usersRouter from "./routes/authRoutes.js";
-import jobPostsRouter from "./routes/jobPostsRoutes.js";
-import workPostsRouter from "./routes/workPostsRoutes.js";
-import paymentsRouter from "./routes/paymentsRoutes.js";
+import customersRouter from "./src/routes/customersRoutes.js";
+import providersRouter from "./src/routes/providersRoutes.js";
+import subscriptionsRouter from "./src/routes/subscriptionsRoutes.js";
+import reviewsRouter from "./src/routes/reviewsRoutes.js";
+import servicesRouter from "./src/routes/servicesRoutes.js";
+import priceListRouter from "./src/routes/priceListRoutes.js";
+import usersRouter from "./src/routes/authRoutes.js";
+import jobPostsRouter from "./src/routes/jobPostsRoutes.js";
+import workPostsRouter from "./src/routes/workPostsRoutes.js";
+import paymentsRouter from "./src/routes/paymentsRoutes.js";
 
 // Initialize express
 const app = express();
@@ -33,12 +33,17 @@ app.use(
   })
 );
 
-// IMPORTANT: Stripe webhook route must come BEFORE express.json()
-// for signatures to verify correctly since it needs the raw body
-// app.use("/api/payments/webhook", paymentsRouter);
+// IMPORTANT: paymentsRouter must come BEFORE express.json() 
+// because the Stripe webhook needs the raw body.
+app.use("/api/payments", paymentsRouter);
 
 app.use(express.json());
 app.use(cookieParser()); // Parse cookies from requests
+
+// Ensure database connection is ready for serverless
+if (process.env.VERCEL) {
+  connectDB().catch((err) => console.error("Database connection error:", err));
+}
 
 // Test if the server is working or not
 app.get("/", (req, res) => {
@@ -61,7 +66,7 @@ app.use("/api/services", servicesRouter);
 app.use("/api/price-list", priceListRouter);
 app.use("/api/jobposts", jobPostsRouter);
 app.use("/api/workposts", workPostsRouter);
-app.use("/api/payments", paymentsRouter);
+// app.use("/api/payments", paymentsRouter); // Moved before express.json() for webhook support
 
 
 // Page not found
