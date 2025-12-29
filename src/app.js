@@ -35,7 +35,7 @@ app.use(
 
 // IMPORTANT: Stripe webhook route must come BEFORE express.json()
 // for signatures to verify correctly since it needs the raw body
-app.use("/api/payments/webhook", paymentsRouter);
+// app.use("/api/payments/webhook", paymentsRouter);
 
 app.use(express.json());
 app.use(cookieParser()); // Parse cookies from requests
