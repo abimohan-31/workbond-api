@@ -1,20 +1,20 @@
 import express from "express";
-import connectDB from "./src/config/db.js";
+import connectDB from "./config/db.js";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-import { defaultError, notFound } from "./src/middleware/ErrorHandlers.js";
+import { defaultError, notFound } from "./middleware/ErrorHandlers.js";
 
 // Import route groups
-import customersRouter from "./src/routes/customersRoutes.js";
-import providersRouter from "./src/routes/providersRoutes.js";
-import subscriptionsRouter from "./src/routes/subscriptionsRoutes.js";
-import reviewsRouter from "./src/routes/reviewsRoutes.js";
-import servicesRouter from "./src/routes/servicesRoutes.js";
-import priceListRouter from "./src/routes/priceListRoutes.js";
-import usersRouter from "./src/routes/authRoutes.js";
-import jobPostsRouter from "./src/routes/jobPostsRoutes.js";
-import workPostsRouter from "./src/routes/workPostsRoutes.js";
-import paymentsRouter from "./src/routes/paymentsRoutes.js";
+import customersRouter from "./routes/customersRoutes.js";
+import providersRouter from "./routes/providersRoutes.js";
+import subscriptionsRouter from "./routes/subscriptionsRoutes.js";
+import reviewsRouter from "./routes/reviewsRoutes.js";
+import servicesRouter from "./routes/servicesRoutes.js";
+import priceListRouter from "./routes/priceListRoutes.js";
+import usersRouter from "./routes/authRoutes.js";
+import jobPostsRouter from "./routes/jobPostsRoutes.js";
+import workPostsRouter from "./routes/workPostsRoutes.js";
+import paymentsRouter from "./routes/paymentsRoutes.js";
 
 // Initialize express
 const app = express();
